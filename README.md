@@ -1,86 +1,72 @@
-# Libro Backend
+# Libro Monorepo
 
-Libro is a personal reading tracker backend API for authentication, book management, reading progress, wishlist management, purchase links, and dashboard summaries.
+Libro is a full-stack personal reading tracker with a Go/Fiber backend and a React/Vite frontend.
 
-## Final Backend Architecture
+## Repository Structure
 
+```text
+.
+├── backend/            # Go backend application
+│   ├── apiSchema/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── migrations/
+│   ├── models/
+│   ├── pkg/
+│   ├── repositories/
+│   ├── services/
+│   ├── statics/
+│   ├── template/
+│   ├── tests/
+│   ├── dev.env
+│   ├── go.mod
+│   ├── go.sum
+│   ├── main.go
+│   └── README.md
+├── frontend/           # React frontend application
+│   ├── public/
+│   ├── src/
+│   ├── package.json
+│   └── vite.config.ts
+├── docker-compose.yml
+└── .gitignore
 ```
-apiSchema/
-controllers/
-dev.env
-go.mod
-go.sum
-logs/
-middleware/
-migrations/
-models/
-pkg/
-repositories/
-services/
-statics/
-template/
-tests/
-main.go
-```
 
-## Setup
-
-1. Install Go 1.24+.
-2. Start MySQL and Redis (for local development you can use `docker-compose.yml`).
-3. Copy env values from `dev.env` or update as needed.
-4. Install dependencies:
-   ```bash
-   go mod download
-   ```
-
-## Environment (`dev.env`)
-
-`dev.env` is loaded automatically at startup and controls app port, DB settings, Redis settings, JWT settings, rate limiting, and frontend CORS origin.
-
-## Database and Redis
-
-- MySQL stores users, books, wishlist items, and purchase links.
-- Redis stores refresh tokens and auth rate-limit counters.
-
-## Migrations
-
-Raw SQL migrations are in `migrations/`:
-
-- `000001_create_users_table.*.sql`
-- `000002_create_books_table.*.sql`
-- `000003_create_wishlist_table.*.sql`
-- `000004_create_purchase_links_table.*.sql`
-
-## Run
+## Run Backend (Local)
 
 ```bash
+cd backend
+go mod download
 go run .
 ```
 
-Server health endpoint:
+Backend runs on `http://localhost:8080` by default.
 
-- `GET /health`
-
-## Tests
+## Run Frontend (Local)
 
 ```bash
-go test ./...
+cd frontend
+npm install
+npm run dev
 ```
 
-Test suites are organized under:
+Frontend runs on `http://localhost:5173` by default.
 
-- `tests/auth`
-- `tests/book`
-- `tests/reading`
-- `tests/testUtils`
-- `tests/user`
-- `tests/wishlist`
+## Run with Docker Compose
 
-## Architecture Notes
+From repo root:
 
-- **Controllers** are thin and only parse/validate request payloads and return responses.
-- **Services** hold business logic.
-- **Repositories** own persistence access and initialization.
-- **apiSchema** contains request/response contracts.
-- **statics** centralizes configs/constants/errors/translations.
-- **middleware/auth** handles access-token verification.
+```bash
+docker compose up --build
+```
+
+Services:
+- Backend: `http://localhost:8080`
+- Frontend: `http://localhost:5173`
+- MySQL: `localhost:3306`
+- Redis: `localhost:6379`
+
+## Notes
+
+- Backend environment defaults are defined in `backend/dev.env`.
+- Frontend API target can be overridden with `VITE_API_URL`.
