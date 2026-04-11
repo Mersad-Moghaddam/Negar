@@ -12,7 +12,7 @@ export const passwordSchema = z.object({
 export const reminderSchema = z.object({
   enabled: z.boolean(),
   time: z.string().min(1, 'Time is required'),
-  frequency: z.enum(['daily', 'weekdays', 'weekends'])
+  frequency: z.enum(['daily', 'weekdays', 'weekends', 'weekly'])
 })
 
 export type NameValues = z.infer<typeof nameSchema>
