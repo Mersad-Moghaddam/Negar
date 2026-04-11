@@ -155,6 +155,8 @@ export const messages = {
       consistency: 'Consistency',
       goalsTitle: 'Reading goals',
       goalSummary: 'Pages {pagesRead}/{pagesGoal} · Books {booksRead}/{booksGoal}',
+      periodWeekly: 'Weekly goal',
+      periodMonthly: 'Monthly goal',
       setWeekly: 'Set weekly',
       setMonthly: 'Set monthly',
       currentSnapshot: 'Current reading snapshot',
@@ -176,6 +178,8 @@ export const messages = {
       coverUrlOptional: 'Cover URL (optional)',
       genreOptional: 'Genre (optional)',
       isbnOptional: 'ISBN (optional)',
+      showForm: 'Show form',
+      hideForm: 'Hide form',
       added: 'Book added to your library.',
       searchPlaceholder: 'Search title or author',
       genre: 'Genre',
@@ -199,7 +203,8 @@ export const messages = {
       addAction: 'Add to wishlist',
       emptyTitle: 'Wishlist is empty',
       emptyDescription: 'Save books you may want to buy or read next.',
-      linkLabel: 'Optional store label'
+      linkLabel: 'Optional store label',
+      urlPlaceholder: 'https://example.com/book'
     },
     profile: {
       title: 'Profile',
@@ -252,7 +257,8 @@ export const messages = {
       notesTitle: 'Notes & highlights',
       notePlaceholder: 'Your note',
       highlightPlaceholder: 'Optional quote/highlight',
-      saveNote: 'Save note'
+      saveNote: 'Save note',
+      notesEmpty: 'No notes yet. Capture your first thought from this book.'
     },
     query: {
       errorTitle: 'Something went wrong',
@@ -407,6 +413,8 @@ export const messages = {
       consistency: 'ثبات مطالعه',
       goalsTitle: 'اهداف مطالعه',
       goalSummary: 'صفحه {pagesRead}/{pagesGoal} · کتاب {booksRead}/{booksGoal}',
+      periodWeekly: 'هدف هفتگی',
+      periodMonthly: 'هدف ماهانه',
       setWeekly: 'هدف هفتگی',
       setMonthly: 'هدف ماهانه',
       currentSnapshot: 'وضعیت مطالعه فعلی',
@@ -428,6 +436,8 @@ export const messages = {
       coverUrlOptional: 'آدرس جلد (اختیاری)',
       genreOptional: 'ژانر (اختیاری)',
       isbnOptional: 'شابک (اختیاری)',
+      showForm: 'نمایش فرم',
+      hideForm: 'بستن فرم',
       added: 'کتاب به کتابخانه اضافه شد.',
       searchPlaceholder: 'جستجوی عنوان یا نویسنده',
       genre: 'ژانر',
@@ -451,7 +461,8 @@ export const messages = {
       addAction: 'ثبت در لیست خرید',
       emptyTitle: 'لیست خرید خالی است',
       emptyDescription: 'کتاب‌هایی که قصد خرید یا مطالعه‌شان را دارید اینجا نگه دارید.',
-      linkLabel: 'برچسب فروشگاه (اختیاری)'
+      linkLabel: 'برچسب فروشگاه (اختیاری)',
+      urlPlaceholder: 'https://example.com/book'
     },
     profile: {
       title: 'پروفایل',
@@ -504,7 +515,8 @@ export const messages = {
       notesTitle: 'یادداشت‌ها و هایلایت‌ها',
       notePlaceholder: 'یادداشت شما',
       highlightPlaceholder: 'نقل‌قول یا هایلایت (اختیاری)',
-      saveNote: 'ذخیره یادداشت'
+      saveNote: 'ذخیره یادداشت',
+      notesEmpty: 'هنوز یادداشتی ثبت نشده است. اولین برداشتت را بنویس.'
     },
     query: {
       errorTitle: 'مشکلی پیش آمد',

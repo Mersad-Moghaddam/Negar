@@ -104,7 +104,7 @@ function StatCard({ title, value, icon: Icon }: { title: string; value: string |
 }
 
 export function Dashboard() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const booksQuery = useBooksQuery()
   const analyticsQuery = useDashboardAnalytics()
   const insightsQuery = useDashboardInsights()
@@ -133,15 +133,19 @@ export function Dashboard() {
   }, [books])
 
   const activeBook = books.find((book) => book.status === 'currentlyReading')
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(locale === 'fa' ? 'fa-IR' : 'en-US'),
+    [locale]
+  )
 
   return (
     <div className="space-y-6">
       <PageHeader title={t('dashboard.title')} description={t('dashboard.description')} eyebrow={t('nav.workspace')} />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard title={t('status.currentlyReading')} value={counts.currentlyReading} icon={BookPlus} />
-        <StatCard title={t('status.inLibrary')} value={counts.inLibrary} icon={LibraryBig} />
-        <StatCard title={t('status.finished')} value={counts.finished} icon={ListChecks} />
-        <StatCard title={t('dashboard.readingPace')} value={analytics?.base.readingPacePerMonth ?? 0} icon={LineChart} />
+        <StatCard title={t('status.currentlyReading')} value={numberFormatter.format(counts.currentlyReading)} icon={BookPlus} />
+        <StatCard title={t('status.inLibrary')} value={numberFormatter.format(counts.inLibrary)} icon={LibraryBig} />
+        <StatCard title={t('status.finished')} value={numberFormatter.format(counts.finished)} icon={ListChecks} />
+        <StatCard title={t('dashboard.readingPace')} value={numberFormatter.format(analytics?.base.readingPacePerMonth ?? 0)} icon={LineChart} />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.35fr_1fr]">
@@ -160,7 +164,7 @@ export function Dashboard() {
                 <Badge className="border border-primary/20 bg-primary/10 text-foreground">{Math.round(activeBook.progressPercentage)}%</Badge>
               </div>
               <Progress value={activeBook.progressPercentage} />
-              <p className="text-xs text-mutedForeground">{activeBook.currentPage} / {activeBook.totalPages}</p>
+              <p className="text-xs text-mutedForeground">{numberFormatter.format(activeBook.currentPage)} / {numberFormatter.format(activeBook.totalPages)}</p>
               <Button size="sm" onClick={() => createSession.mutate({ bookId: activeBook.id, date: new Date().toISOString().slice(0, 10), duration: 25, pages: 12 })}>
                 {t('dashboard.logSession')}
               </Button>
@@ -196,9 +200,9 @@ export function Dashboard() {
           >
             {analytics ? (
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="metric-tile"><p>{t('dashboard.totalPagesRead')}</p><p>{analytics.base.totalPagesRead}</p></div>
+                <div className="metric-tile"><p>{t('dashboard.totalPagesRead')}</p><p>{numberFormatter.format(analytics.base.totalPagesRead)}</p></div>
                 <div className="metric-tile"><p>{t('dashboard.completionRate')}</p><p>{analytics.base.completionRate}%</p></div>
-                <div className="metric-tile"><p>{t('dashboard.readingPace')}</p><p>{analytics.base.readingPacePerMonth}</p></div>
+                <div className="metric-tile"><p>{t('dashboard.readingPace')}</p><p>{numberFormatter.format(analytics.base.readingPacePerMonth)}</p></div>
                 <div className="metric-tile"><p>{t('dashboard.consistency')}</p><p>{analytics.consistencyScore}%</p></div>
               </div>
             ) : null}
@@ -210,7 +214,7 @@ export function Dashboard() {
           <div className="space-y-3">
             {goals.map((goal) => (
               <div key={goal.period} className="rounded-xl border border-border bg-surface p-3">
-                <p className="font-medium capitalize">{goal.period}</p>
+                <p className="font-medium">{goal.period === 'weekly' ? t('dashboard.periodWeekly') : t('dashboard.periodMonthly')}</p>
                 <p className="text-xs text-mutedForeground">{t('dashboard.goalSummary', { pagesRead: goal.pagesRead, pagesGoal: goal.pagesGoal, booksRead: goal.booksRead, booksGoal: goal.booksGoal })}</p>
               </div>
             ))}
@@ -235,6 +239,7 @@ export function Library() {
   const booksQuery = useBooksQuery({ search, status, genre, sortBy, order: 'desc' })
   const createBookMutation = useCreateBookMutation()
   const deleteBookMutation = useDeleteBookMutation()
+  const [showAddBookForm, setShowAddBookForm] = useState(true)
 
   const addBookForm = useForm<AddBookValues>({
     resolver: zodResolver(addBookSchema),
@@ -255,19 +260,26 @@ export function Library() {
     <div className="space-y-6">
       <PageHeader title={t('library.title')} description={t('library.description')} eyebrow={t('nav.workspace')} />
       <SectionCard>
-        <h2 className="flex items-center gap-2 text-section-title"><BookPlus className="h-4 w-4" />{t('library.addBook')}</h2>
-        <form onSubmit={onAddBook} className="grid gap-3 md:grid-cols-8">
-          <Input placeholder={t('library.titlePlaceholder')} {...addBookForm.register('title')} />
-          <Input placeholder={t('library.authorPlaceholder')} {...addBookForm.register('author')} />
-          <Input type="number" min={1} placeholder={t('library.totalPages')} {...addBookForm.register('totalPages', { valueAsNumber: true })} />
-          <Select {...addBookForm.register('status')}>
-            {statusOptions.map((s) => <option key={s} value={s}>{t(`status.${s}`)}</option>)}
-          </Select>
-          <Input placeholder={t('library.coverUrlOptional')} {...addBookForm.register('coverUrl')} />
-          <Input placeholder={t('library.genreOptional')} {...addBookForm.register('genre')} />
-          <Input placeholder={t('library.isbnOptional')} {...addBookForm.register('isbn')} />
-          <Button type="submit" disabled={createBookMutation.isPending}>{t('library.add')}</Button>
-        </form>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="flex items-center gap-2 text-section-title"><BookPlus className="h-4 w-4" />{t('library.addBook')}</h2>
+          <Button variant="ghost" size="sm" onClick={() => setShowAddBookForm((prev) => !prev)}>
+            {showAddBookForm ? t('library.hideForm') : t('library.showForm')}
+          </Button>
+        </div>
+        {showAddBookForm ? (
+          <form onSubmit={onAddBook} className="grid gap-3 md:grid-cols-8">
+            <Input placeholder={t('library.titlePlaceholder')} {...addBookForm.register('title')} />
+            <Input placeholder={t('library.authorPlaceholder')} {...addBookForm.register('author')} />
+            <Input type="number" min={1} placeholder={t('library.totalPages')} {...addBookForm.register('totalPages', { valueAsNumber: true })} />
+            <Select {...addBookForm.register('status')}>
+              {statusOptions.map((s) => <option key={s} value={s}>{t(`status.${s}`)}</option>)}
+            </Select>
+            <Input placeholder={t('library.coverUrlOptional')} {...addBookForm.register('coverUrl')} />
+            <Input placeholder={t('library.genreOptional')} {...addBookForm.register('genre')} />
+            <Input placeholder={t('library.isbnOptional')} {...addBookForm.register('isbn')} />
+            <Button type="submit" disabled={createBookMutation.isPending}>{t('library.add')}</Button>
+          </form>
+        ) : null}
       </SectionCard>
       <DataToolbar>
         <Input placeholder={t('library.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -403,10 +415,26 @@ export function Wishlist() {
               <form onSubmit={linkForm.handleSubmit(async (values) => addLink.mutateAsync({ itemId: item.id, ...values }))} className="space-y-2">
                 <Input placeholder={t('wishlist.linkLabel')} {...linkForm.register('label')} />
                 <div className="flex gap-2">
-                  <Input placeholder="https://example.com/book" {...linkForm.register('url')} />
+                  <Input placeholder={t('wishlist.urlPlaceholder')} {...linkForm.register('url')} />
                   <Button type="submit" disabled={addLink.isPending}><ExternalLink className="h-4 w-4" /></Button>
                 </div>
               </form>
+              {item.purchaseLinks.length ? (
+                <div className="space-y-2">
+                  {item.purchaseLinks.map((link) => (
+                    <a
+                      key={link.id}
+                      href={link.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-between rounded-lg border border-border bg-surface px-3 py-2 text-xs text-mutedForeground hover:bg-secondary"
+                    >
+                      <span>{link.label || link.alias}</span>
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  ))}
+                </div>
+              ) : null}
             </SectionCard>
           ))}
         </div>
@@ -458,6 +486,9 @@ export function BookDetails({ id }: { id: string }) {
               {n.highlight ? <p className="mt-1 text-mutedForeground">“{n.highlight}”</p> : null}
             </div>
           ))}
+          {!notesQuery.data?.length ? (
+            <p className="text-sm text-mutedForeground">{t('books.notesEmpty')}</p>
+          ) : null}
         </div>
       </SectionCard>
       <SectionCard>
