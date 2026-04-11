@@ -78,6 +78,29 @@ import { BookStatus } from '../types'
 
 const statusOptions: BookStatus[] = ['inLibrary', 'currentlyReading', 'finished', 'nextToRead']
 
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null
+  return <p className="mt-1 text-xs text-destructive">{message}</p>
+}
+
+function FieldBlock({
+  label,
+  children,
+  hint
+}: {
+  label: string
+  children: React.ReactNode
+  hint?: string
+}) {
+  return (
+    <label className="block space-y-1.5">
+      <span className="text-label text-mutedForeground">{label}</span>
+      {children}
+      {hint ? <p className="text-xs text-mutedForeground">{hint}</p> : null}
+    </label>
+  )
+}
+
 function BookCover({ title, coverUrl }: { title: string; coverUrl?: string | null }) {
   if (coverUrl) {
     return (
@@ -293,16 +316,52 @@ export function Library() {
         />
         {showAddBookForm ? (
           <form onSubmit={onAddBook} className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <Input placeholder={t('library.titlePlaceholder')} {...addBookForm.register('title')} />
-            <Input placeholder={t('library.authorPlaceholder')} {...addBookForm.register('author')} />
-            <Input type="number" min={1} placeholder={t('library.totalPages')} {...addBookForm.register('totalPages', { valueAsNumber: true })} />
-            <Select {...addBookForm.register('status')}>
-              {statusOptions.map((s) => <option key={s} value={s}>{t(`status.${s}`)}</option>)}
-            </Select>
-            <Input placeholder={t('library.coverUrlOptional')} {...addBookForm.register('coverUrl')} />
-            <Input placeholder={t('library.genreOptional')} {...addBookForm.register('genre')} />
-            <Input placeholder={t('library.isbnOptional')} {...addBookForm.register('isbn')} />
-            <Button type="submit" disabled={createBookMutation.isPending}>{t('library.add')}</Button>
+            <div>
+              <FieldBlock label={t('library.titlePlaceholder')}>
+                <Input placeholder={t('library.titlePlaceholder')} {...addBookForm.register('title')} />
+              </FieldBlock>
+              <FieldError message={addBookForm.formState.errors.title?.message} />
+            </div>
+            <div>
+              <FieldBlock label={t('library.authorPlaceholder')}>
+                <Input placeholder={t('library.authorPlaceholder')} {...addBookForm.register('author')} />
+              </FieldBlock>
+              <FieldError message={addBookForm.formState.errors.author?.message} />
+            </div>
+            <div>
+              <FieldBlock label={t('library.totalPages')}>
+                <Input
+                  type="number"
+                  min={1}
+                  placeholder={t('library.totalPages')}
+                  {...addBookForm.register('totalPages', { valueAsNumber: true })}
+                />
+              </FieldBlock>
+              <FieldError message={addBookForm.formState.errors.totalPages?.message} />
+            </div>
+            <FieldBlock label={t('library.status')}>
+              <Select {...addBookForm.register('status')}>
+                {statusOptions.map((s) => (
+                  <option key={s} value={s}>
+                    {t(`status.${s}`)}
+                  </option>
+                ))}
+              </Select>
+            </FieldBlock>
+            <FieldBlock label={t('library.coverUrlOptional')}>
+              <Input placeholder={t('library.coverUrlOptional')} {...addBookForm.register('coverUrl')} />
+            </FieldBlock>
+            <FieldBlock label={t('library.genreOptional')}>
+              <Input placeholder={t('library.genreOptional')} {...addBookForm.register('genre')} />
+            </FieldBlock>
+            <FieldBlock label={t('library.isbnOptional')}>
+              <Input placeholder={t('library.isbnOptional')} {...addBookForm.register('isbn')} />
+            </FieldBlock>
+            <div className="flex items-end">
+              <Button type="submit" className="w-full" disabled={createBookMutation.isPending}>
+                {t('library.add')}
+              </Button>
+            </div>
           </form>
         ) : null}
       </SectionCard>
@@ -416,18 +475,38 @@ export function Wishlist() {
   const { t } = useI18n()
 
   const itemForm = useForm<WishlistItemValues>({ resolver: zodResolver(wishlistItemSchema), defaultValues: { title: '', author: '', notes: '' } })
-  const linkForm = useForm<WishlistLinkValues>({ resolver: zodResolver(wishlistLinkSchema), defaultValues: { label: '', url: '' } })
-
   return (
     <div className="space-y-6">
       <PageHeader title={t('wishlist.title')} description={t('wishlist.description')} eyebrow={t('books.collection')} />
       <SectionCard>
         <SectionHeading title={t('wishlist.addTitle')} description={t('wishlist.addDescription')} icon={<Bookmark className="h-4 w-4" />} />
         <form onSubmit={itemForm.handleSubmit(async (values) => addItem.mutateAsync({ ...values, expectedPrice: Number.isNaN(values.expectedPrice) ? null : values.expectedPrice ?? null }))} className="grid gap-3 md:grid-cols-2">
-          <Input placeholder={t('library.titlePlaceholder')} {...itemForm.register('title')} />
-          <Input placeholder={t('library.authorPlaceholder')} {...itemForm.register('author')} />
-          <Input type="number" step="0.01" placeholder={t('wishlist.expectedPrice')} {...itemForm.register('expectedPrice', { valueAsNumber: true })} />
-          <Input placeholder={t('wishlist.notes')} {...itemForm.register('notes')} />
+          <div>
+            <FieldBlock label={t('library.titlePlaceholder')}>
+              <Input placeholder={t('library.titlePlaceholder')} {...itemForm.register('title')} />
+            </FieldBlock>
+            <FieldError message={itemForm.formState.errors.title?.message} />
+          </div>
+          <div>
+            <FieldBlock label={t('library.authorPlaceholder')}>
+              <Input placeholder={t('library.authorPlaceholder')} {...itemForm.register('author')} />
+            </FieldBlock>
+            <FieldError message={itemForm.formState.errors.author?.message} />
+          </div>
+          <div>
+            <FieldBlock label={t('wishlist.expectedPrice')}>
+              <Input
+                type="number"
+                step="0.01"
+                placeholder={t('wishlist.expectedPrice')}
+                {...itemForm.register('expectedPrice', { valueAsNumber: true })}
+              />
+            </FieldBlock>
+            <FieldError message={itemForm.formState.errors.expectedPrice?.message} />
+          </div>
+          <FieldBlock label={t('wishlist.notes')}>
+            <Input placeholder={t('wishlist.notes')} {...itemForm.register('notes')} />
+          </FieldBlock>
           <Button type="submit" className="md:col-span-2 md:w-fit" disabled={addItem.isPending}>{t('wishlist.addAction')}</Button>
         </form>
       </SectionCard>
@@ -443,13 +522,11 @@ export function Wishlist() {
                 <Badge className="border border-warning/30 bg-warning/10 text-warning"><CircleDollarSign className="h-3.5 w-3.5" /></Badge>
               </div>
               <Separator />
-              <form onSubmit={linkForm.handleSubmit(async (values) => addLink.mutateAsync({ itemId: item.id, ...values }))} className="space-y-2">
-                <Input placeholder={t('wishlist.linkLabel')} {...linkForm.register('label')} />
-                <div className="flex gap-2">
-                  <Input placeholder={t('wishlist.urlPlaceholder')} {...linkForm.register('url')} />
-                  <Button type="submit" disabled={addLink.isPending}><ExternalLink className="h-4 w-4" /></Button>
-                </div>
-              </form>
+              <WishlistLinkForm
+                itemId={item.id}
+                onSubmit={async (values) => addLink.mutateAsync({ itemId: item.id, ...values })}
+                isPending={addLink.isPending}
+              />
               {item.purchaseLinks.length ? (
                 <div className="space-y-2">
                   {item.purchaseLinks.map((link) => (
@@ -506,8 +583,12 @@ export function BookDetails({ id }: { id: string }) {
       <SectionCard>
         <SectionHeading title={t('books.notesTitle')} icon={<NotebookPen className="h-4 w-4" />} />
         <form className="space-y-2" onSubmit={noteForm.handleSubmit(async (values) => { await addNote.mutateAsync(values); noteForm.reset() })}>
-          <Textarea placeholder={t('books.notePlaceholder')} {...noteForm.register('note')} />
-          <Input placeholder={t('books.highlightPlaceholder')} {...noteForm.register('highlight')} />
+          <FieldBlock label={t('books.noteLabel')}>
+            <Textarea placeholder={t('books.notePlaceholder')} {...noteForm.register('note')} />
+          </FieldBlock>
+          <FieldBlock label={t('books.highlightLabel')}>
+            <Input placeholder={t('books.highlightPlaceholder')} {...noteForm.register('highlight')} />
+          </FieldBlock>
           <Button type="submit" size="sm">{t('books.saveNote')}</Button>
         </form>
         <div className="mt-3 space-y-2">
@@ -529,8 +610,8 @@ export function BookDetails({ id }: { id: string }) {
             <Button key={status} variant="secondary" onClick={() => updateStatus.mutate({ id: book.id, status })}>{t('books.moveTo')} {t(`status.${status}`)}</Button>
           ))}
         </div>
-        <form className="mt-3 flex gap-2" onSubmit={form.handleSubmit(async (values) => updateProgress.mutateAsync({ id: book.id, currentPage: values.currentPage }))}>
-          <Input type="number" min={0} max={book.totalPages} {...form.register('currentPage', { valueAsNumber: true })} />
+        <form className="mt-3 flex flex-wrap gap-2" onSubmit={form.handleSubmit(async (values) => updateProgress.mutateAsync({ id: book.id, currentPage: values.currentPage }))}>
+          <Input className="min-w-[180px] flex-1" type="number" min={0} max={book.totalPages} {...form.register('currentPage', { valueAsNumber: true })} />
           <Button type="submit">{t('books.updateProgress')}</Button>
         </form>
         <Button className="mt-3" variant="secondary" onClick={async () => { await deleteBook.mutateAsync(book.id); nav('/library') }}>{t('books.delete')}</Button>
@@ -560,29 +641,45 @@ export function Profile() {
       <SectionCard className="max-w-2xl">
         <SectionHeading title={t('profile.updateName')} icon={<Sparkles className="h-4 w-4" />} />
         <form onSubmit={nameForm.handleSubmit(async (values) => { await updateName.mutateAsync(values.name); toast.success(t('profile.nameSuccess')) })} className="space-y-3">
-          <Input placeholder={t('profile.newName')} {...nameForm.register('name')} />
+          <FieldBlock label={t('profile.newName')}>
+            <Input placeholder={t('profile.newName')} {...nameForm.register('name')} />
+          </FieldBlock>
+          <FieldError message={nameForm.formState.errors.name?.message} />
           <Button type="submit" disabled={updateName.isPending}>{t('profile.updateNameAction')}</Button>
         </form>
       </SectionCard>
       <SectionCard className="max-w-2xl">
         <SectionHeading title={t('profile.updatePassword')} icon={<Timer className="h-4 w-4" />} />
         <form onSubmit={passwordForm.handleSubmit(async (values) => { await updatePassword.mutateAsync(values); toast.success(t('profile.passwordSuccess')); passwordForm.reset() })} className="space-y-3">
-          <Input type="password" placeholder={t('profile.currentPassword')} {...passwordForm.register('currentPassword')} />
-          <Input type="password" placeholder={t('profile.newPassword')} {...passwordForm.register('newPassword')} />
+          <div>
+            <FieldBlock label={t('profile.currentPassword')}>
+              <Input type="password" placeholder={t('profile.currentPassword')} {...passwordForm.register('currentPassword')} />
+            </FieldBlock>
+            <FieldError message={passwordForm.formState.errors.currentPassword?.message} />
+          </div>
+          <div>
+            <FieldBlock label={t('profile.newPassword')}>
+              <Input type="password" placeholder={t('profile.newPassword')} {...passwordForm.register('newPassword')} />
+            </FieldBlock>
+            <FieldError message={passwordForm.formState.errors.newPassword?.message} />
+          </div>
           <Button type="submit" disabled={updatePassword.isPending}>{t('profile.updatePasswordAction')}</Button>
         </form>
       </SectionCard>
       <SectionCard className="max-w-2xl">
         <SectionHeading title={t('profile.reminders')} icon={<Flame className="h-4 w-4" />} />
         <form onSubmit={reminderForm.handleSubmit(async (values) => { await updateReminder.mutateAsync(values); toast.success(t('profile.reminderSuccess')) })} className="grid gap-3 md:grid-cols-3">
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={reminderForm.watch('enabled')} onChange={(e) => reminderForm.setValue('enabled', e.target.checked)} /> {t('profile.reminderEnabled')}</label>
-          <Input type="time" {...reminderForm.register('time')} />
-          <Select {...reminderForm.register('frequency')}>
+          <label className="flex h-11 items-center gap-2 rounded-xl border border-input/85 bg-card px-3 text-sm">
+            <input type="checkbox" checked={reminderForm.watch('enabled')} onChange={(e) => reminderForm.setValue('enabled', e.target.checked)} />
+            {t('profile.reminderEnabled')}
+          </label>
+          <FieldBlock label={t('profile.reminderTime')}><Input type="time" {...reminderForm.register('time')} /></FieldBlock>
+          <FieldBlock label={t('profile.reminderFrequency')}><Select {...reminderForm.register('frequency')}>
             <option value="daily">{t('profile.daily')}</option>
             <option value="weekdays">{t('profile.weekdays')}</option>
             <option value="weekends">{t('profile.weekends')}</option>
             <option value="weekly">{t('profile.weekly')}</option>
-          </Select>
+          </Select></FieldBlock>
           <Button type="submit" className="md:col-span-3 md:w-fit" disabled={updateReminder.isPending}>{t('profile.saveReminders')}</Button>
         </form>
       </SectionCard>
@@ -591,5 +688,48 @@ export function Profile() {
         <Textarea placeholder={t('profile.notesPlaceholder')} />
       </SectionCard>
     </div>
+  )
+}
+
+function WishlistLinkForm({
+  itemId,
+  onSubmit,
+  isPending
+}: {
+  itemId: string
+  onSubmit: (values: WishlistLinkValues) => Promise<unknown>
+  isPending: boolean
+}) {
+  const { t } = useI18n()
+  const form = useForm<WishlistLinkValues>({
+    resolver: zodResolver(wishlistLinkSchema),
+    defaultValues: { label: '', url: '' }
+  })
+
+  return (
+    <form
+      onSubmit={form.handleSubmit(async (values) => {
+        await onSubmit(values)
+        form.reset()
+      })}
+      className="space-y-2"
+      key={itemId}
+    >
+      <div>
+        <FieldBlock label={t('wishlist.linkLabel')}>
+          <Input placeholder={t('wishlist.linkLabel')} {...form.register('label')} />
+        </FieldBlock>
+        <FieldError message={form.formState.errors.label?.message} />
+      </div>
+      <div>
+        <div className="flex gap-2">
+          <Input placeholder={t('wishlist.urlPlaceholder')} {...form.register('url')} />
+          <Button type="submit" disabled={isPending}>
+            <ExternalLink className="h-4 w-4" />
+          </Button>
+        </div>
+        <FieldError message={form.formState.errors.url?.message} />
+      </div>
+    </form>
   )
 }
