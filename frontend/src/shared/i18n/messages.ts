@@ -127,7 +127,11 @@ export const messages = {
       hasAccount: 'Already have an account?',
       needAccount: 'Need an account?',
       registrationFailed: 'Registration failed. Please check your details.',
-      invalidCredentials: 'Invalid credentials. Please try again.'
+      invalidCredentials: 'Invalid credentials. Please try again.',
+      emailAlreadyExists: 'An account with this email already exists.',
+      missingFields: 'Please complete all required fields correctly.',
+      networkFailure: 'Network error. Please check your connection and try again.',
+      unexpectedServerError: 'Unexpected server error. Please try again.'
     },
     dashboard: {
       title: 'Dashboard',
@@ -335,7 +339,11 @@ export const messages = {
       hasAccount: 'حساب دارید؟',
       needAccount: 'حساب ندارید؟',
       registrationFailed: 'ثبت‌نام ناموفق بود. اطلاعات را بررسی کنید.',
-      invalidCredentials: 'اطلاعات ورود نامعتبر است.'
+      invalidCredentials: 'اطلاعات ورود نامعتبر است.',
+      emailAlreadyExists: 'حسابی با این ایمیل از قبل وجود دارد.',
+      missingFields: 'لطفاً تمام فیلدهای ضروری را به‌درستی تکمیل کنید.',
+      networkFailure: 'خطای شبکه. اتصال خود را بررسی کرده و دوباره تلاش کنید.',
+      unexpectedServerError: 'خطای غیرمنتظره سرور. دوباره تلاش کنید.'
     },
     dashboard: {
       title: 'داشبورد',

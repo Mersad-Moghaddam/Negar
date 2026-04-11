@@ -36,6 +36,7 @@ func (h *AuthController) Register(c *fiber.Ctx) error {
 	validation.StringLength(req.Name, "name", 2, 120, errs)
 	validation.StringLength(req.Email, "email", 5, 160, errs)
 	validation.StringLength(req.Password, "password", 8, 72, errs)
+	validation.Email(req.Email, "email", errs)
 	if req.Password != req.ConfirmPassword {
 		errs.Add("confirmPassword", "must match password")
 	}

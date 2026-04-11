@@ -1,4 +1,5 @@
 import api from '../../../api/client'
+import { extractData } from '../../../api/http'
 import { ReminderSettings } from '../../../types'
 
 export async function updateProfileName(name: string) {
@@ -11,7 +12,7 @@ export async function updatePassword(currentPassword: string, newPassword: strin
 
 export async function fetchReminderSettings() {
   const response = await api.get<ReminderSettings>('/users/reminders')
-  return response.data
+  return extractData(response)
 }
 
 export async function updateReminderSettings(payload: ReminderSettings) {

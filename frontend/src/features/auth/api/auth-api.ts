@@ -1,4 +1,5 @@
 import api from '../../../api/client'
+import { extractData } from '../../../api/http'
 import { User } from '../../../types'
 
 export type AuthPayload = {
@@ -18,7 +19,7 @@ export async function login(payload: AuthPayload) {
     '/auth/login',
     payload
   )
-  return response.data
+  return extractData(response)
 }
 
 export async function register(payload: RegisterPayload) {

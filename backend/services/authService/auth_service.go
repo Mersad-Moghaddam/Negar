@@ -2,6 +2,7 @@ package authService
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -36,7 +37,7 @@ func (s *Service) Register(ctx context.Context, name, email, password string) (*
 	}
 	_, err := s.users.GetByEmail(ctx, email)
 	if err == nil {
-		return nil, customErr.ErrConflict
+		return nil, customErr.ErrEmailAlreadyExists
 	}
 	if err != nil && !errorsIsRecordNotFound(err) {
 		return nil, err
@@ -46,7 +47,16 @@ func (s *Service) Register(ctx context.Context, name, email, password string) (*
 		return nil, err
 	}
 	u := &user.User{Name: name, Email: email, PasswordHash: hash}
-	return u, s.users.Create(ctx, u)
+	if err = s.users.Create(ctx, u); err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return nil, customErr.ErrEmailAlreadyExists
+		}
+		if isMySQLDuplicateEntry(err) {
+			return nil, customErr.ErrEmailAlreadyExists
+		}
+		return nil, err
+	}
+	return u, nil
 }
 
 func (s *Service) Login(ctx context.Context, ip, email, password string) (*user.User, *auth.TokenPair, int64, error) {
@@ -59,7 +69,7 @@ func (s *Service) Login(ctx context.Context, ip, email, password string) (*user.
 	}
 	u, err := s.users.GetByEmail(ctx, strings.ToLower(strings.TrimSpace(email)))
 	if err != nil || security.ComparePassword(u.PasswordHash, password) != nil {
-		return nil, nil, remaining, customErr.ErrUnauthorized
+		return nil, nil, remaining, customErr.ErrInvalidCredentials
 	}
 	if err = s.auth.DeleteRefreshTokensByUser(ctx, u.ID.String()); err != nil {
 		return nil, nil, remaining, err
@@ -71,11 +81,11 @@ func (s *Service) Login(ctx context.Context, ip, email, password string) (*user.
 func (s *Service) Refresh(ctx context.Context, refreshToken string) (*auth.TokenPair, error) {
 	claims, err := security.ParseToken(s.jwtSecret, refreshToken)
 	if err != nil || claims.Type != "refresh" {
-		return nil, customErr.ErrUnauthorized
+		return nil, customErr.ErrInvalidRefreshToken
 	}
 	uid, err := s.auth.GetRefreshTokenUser(ctx, claims.TokenID)
 	if err != nil || uid != claims.UserID {
-		return nil, customErr.ErrUnauthorized
+		return nil, customErr.ErrInvalidRefreshToken
 	}
 	_ = s.auth.DeleteRefreshToken(ctx, claims.TokenID)
 	return s.createTokens(ctx, claims.UserID)
@@ -105,3 +115,7 @@ func (s *Service) createTokens(ctx context.Context, userID string) (*auth.TokenP
 }
 
 func errorsIsRecordNotFound(err error) bool { return err == gorm.ErrRecordNotFound }
+
+func isMySQLDuplicateEntry(err error) bool {
+	return strings.Contains(strings.ToLower(err.Error()), "duplicate entry")
+}

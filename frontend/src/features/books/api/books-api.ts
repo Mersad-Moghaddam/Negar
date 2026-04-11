@@ -1,4 +1,5 @@
 import api from '../../../api/client'
+import { extractData } from '../../../api/http'
 import { Book, BookNote, BookStatus } from '../../../types'
 
 const asItems = <T,>(data: T[] | { items: T[] }) => (Array.isArray(data) ? data : data.items)
@@ -11,12 +12,12 @@ export async function fetchBooks(params?: {
   order?: 'asc' | 'desc'
 }) {
   const response = await api.get<Book[] | { items: Book[] }>('/books', { params })
-  return asItems(response.data)
+  return asItems(extractData(response))
 }
 
 export async function fetchBook(id: string) {
   const response = await api.get<Book>(`/books/${id}`)
-  return response.data
+  return extractData(response)
 }
 
 export async function createBook(payload: {
@@ -41,7 +42,7 @@ export async function updateBookProgress(id: string, currentPage: number) {
 
 export async function fetchBookNotes(id: string) {
   const response = await api.get<{ items: BookNote[] }>(`/books/${id}/notes`)
-  return response.data.items
+  return extractData(response).items
 }
 
 export async function createBookNote(id: string, payload: { note: string; highlight?: string }) {
