@@ -9,6 +9,7 @@ type I18nContextType = {
   setLocale: (locale: Locale) => void
   isRtl: boolean
   t: (key: string, params?: TranslationParams) => string
+  tm: <T = unknown>(key: string) => T | undefined
 }
 
 const I18nContext = createContext<I18nContextType | null>(null)
@@ -51,6 +52,12 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
         const fallback = getByPath(messages.en, key)
         if (typeof fallback === 'string') return interpolate(fallback, params)
         return key
+      },
+      tm: <T = unknown>(key: string) => {
+        const active = getByPath(messages[locale], key)
+        if (active !== undefined) return active as T
+        const fallback = getByPath(messages.en, key)
+        return fallback as T | undefined
       }
     }),
     [locale]

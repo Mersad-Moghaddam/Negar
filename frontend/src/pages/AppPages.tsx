@@ -517,6 +517,7 @@ export function Profile() {
             <option value="daily">{t('profile.daily')}</option>
             <option value="weekdays">{t('profile.weekdays')}</option>
             <option value="weekends">{t('profile.weekends')}</option>
+            <option value="weekly">{t('profile.weekly')}</option>
           </Select>
           <Button type="submit" className="md:col-span-3 md:w-fit" disabled={updateReminder.isPending}>{t('profile.saveReminders')}</Button>
         </form>

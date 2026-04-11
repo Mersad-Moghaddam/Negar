@@ -188,6 +188,7 @@ export const messages = {
       daily: 'Daily',
       weekdays: 'Weekdays',
       weekends: 'Weekends',
+      weekly: 'Weekly',
       saveReminders: 'Save reminder settings',
       reminderSuccess: 'Reminder settings updated.'
     },
@@ -395,6 +396,7 @@ export const messages = {
       daily: 'روزانه',
       weekdays: 'روزهای کاری',
       weekends: 'آخر هفته',
+      weekly: 'هفتگی',
       saveReminders: 'ذخیره تنظیمات یادآور',
       reminderSuccess: 'تنظیمات یادآور ذخیره شد.'
     },

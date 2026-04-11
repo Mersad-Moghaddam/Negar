@@ -25,9 +25,9 @@ const FieldError = ({ message }: { message?: string }) =>
   message ? <p className="text-xs text-destructive">{message}</p> : null
 
 export function Landing() {
-  const { t } = useI18n()
-  const valueCards = t('landing.valueCards') as unknown as Array<{ title: string; text: string }>
-  const testimonials = t('landing.testimonials') as unknown as Array<{ quote: string; author: string }>
+  const { t, tm } = useI18n()
+  const valueCards = tm<Array<{ title: string; text: string }>>('landing.valueCards') ?? []
+  const testimonials = tm<Array<{ quote: string; author: string }>>('landing.testimonials') ?? []
 
   return (
     <div className={wrap}>
