@@ -16,7 +16,12 @@ export function PageHeader({
   className?: string
 }) {
   return (
-    <header className={cn('surface flex flex-col gap-4 p-5 md:flex-row md:items-start md:justify-between md:p-6', className)}>
+    <header
+      className={cn(
+        'surface flex flex-col gap-4 p-5 md:flex-row md:items-start md:justify-between md:p-7',
+        className
+      )}
+    >
       <div className="space-y-2">
         {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
         <h1 className="text-page-title text-foreground">{title}</h1>

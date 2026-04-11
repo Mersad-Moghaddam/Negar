@@ -7,7 +7,8 @@ import {
   Compass,
   Goal,
   Library,
-  LogOut
+  LogOut,
+  Sparkles
 } from 'lucide-react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 
@@ -22,16 +23,16 @@ import { LanguageToggle } from '../widgets/language-toggle/language-toggle'
 const links = [
   { to: '/dashboard', labelKey: 'nav.dashboard', icon: Compass, section: 'core' },
   { to: '/library', labelKey: 'nav.library', icon: Library, section: 'core' },
-  { to: '/reading', labelKey: 'nav.reading', icon: BookOpen, section: 'queue' },
-  { to: '/finished', labelKey: 'nav.finished', icon: BookCheck, section: 'queue' },
-  { to: '/next', labelKey: 'nav.nextToRead', icon: BookMarked, section: 'queue' },
-  { to: '/wishlist', labelKey: 'nav.wishlist', icon: BookHeart, section: 'queue' },
+  { to: '/reading', labelKey: 'nav.reading', icon: BookOpen, section: 'flow' },
+  { to: '/finished', labelKey: 'nav.finished', icon: BookCheck, section: 'flow' },
+  { to: '/next', labelKey: 'nav.nextToRead', icon: BookMarked, section: 'flow' },
+  { to: '/wishlist', labelKey: 'nav.wishlist', icon: BookHeart, section: 'flow' },
   { to: '/profile', labelKey: 'nav.profile', icon: CircleUserRound, section: 'account' }
 ] as const
 
 const groups = [
   { key: 'core', titleKey: 'nav.workspace' },
-  { key: 'queue', titleKey: 'nav.readingFlow' },
+  { key: 'flow', titleKey: 'nav.readingFlow' },
   { key: 'account', titleKey: 'nav.account' }
 ] as const
 
@@ -50,16 +51,24 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="app-shell">
-      <div className="container grid min-h-screen grid-cols-1 gap-6 py-5 lg:grid-cols-[300px_1fr] lg:py-7">
-        <aside className="surface bg-card/95 p-5 lg:sticky lg:top-7 lg:h-[calc(100vh-3.5rem)] lg:flex lg:flex-col">
-          <Link to="/dashboard" className="mb-7 block rounded-2xl border border-border/70 bg-surface/70 px-4 py-3">
-            <p className="text-xl font-semibold tracking-tight text-primary">Libro</p>
-            <p className="mt-1 text-xs text-mutedForeground">{t('nav.platformSubtitle')}</p>
+      <div className="container grid min-h-screen grid-cols-1 gap-6 py-5 lg:grid-cols-[290px_1fr] lg:py-7">
+        <aside className="surface bg-card/95 p-4 lg:sticky lg:top-7 lg:h-[calc(100vh-3.5rem)] lg:flex lg:flex-col lg:p-5">
+          <Link
+            to="/dashboard"
+            className="mb-6 block rounded-2xl border border-border/70 bg-surface/75 px-4 py-3.5"
+          >
+            <div className="flex items-center gap-2">
+              <span className="rounded-lg border border-border bg-card p-1.5">
+                <Sparkles className="h-4 w-4 text-primary" />
+              </span>
+              <p className="text-xl font-semibold tracking-tight text-primary">Libro</p>
+            </div>
+            <p className="mt-2 text-xs text-mutedForeground">{t('nav.platformSubtitle')}</p>
           </Link>
 
           <div className="space-y-6 overflow-y-auto pr-1">
             {groups.map((group) => (
-              <div key={group.key} className="space-y-3">
+              <div key={group.key} className="space-y-2.5">
                 <p className="eyebrow px-2">{t(group.titleKey)}</p>
                 <nav className="grid grid-cols-1 gap-1.5">
                   {links
@@ -73,7 +82,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                             'group flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200 ease-premium',
                             isActive
                               ? 'bg-primary text-primaryForeground shadow-sm'
-                              : 'text-mutedForeground hover:bg-secondary hover:text-foreground'
+                              : 'text-mutedForeground hover:bg-secondary/85 hover:text-foreground'
                           )
                         }
                       >
@@ -116,7 +125,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </aside>
 
         <main className="space-y-6 pb-8 page-enter">
-          <div className="glass-panel flex flex-wrap items-center justify-between gap-4 px-5 py-3.5">
+          <div className="glass-panel flex flex-wrap items-center justify-between gap-4 px-5 py-3.5 md:px-6">
             <div>
               <p className="eyebrow">{t('nav.platformTitle')}</p>
               <p className="text-sm font-medium text-foreground">

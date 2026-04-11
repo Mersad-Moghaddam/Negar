@@ -14,8 +14,9 @@ const variants: Record<ButtonVariant, string> = {
   primary:
     'border border-primary/90 bg-primary text-primaryForeground shadow-sm hover:-translate-y-0.5 hover:brightness-110 hover:shadow-md',
   secondary:
-    'border border-border bg-card text-foreground/90 shadow-sm hover:-translate-y-0.5 hover:border-border/80 hover:bg-secondary',
-  ghost: 'border border-transparent text-foreground/85 hover:bg-secondary/85 hover:text-foreground',
+    'border border-border bg-card text-foreground/90 shadow-sm hover:-translate-y-0.5 hover:border-border/75 hover:bg-secondary/75',
+  ghost:
+    'border border-transparent bg-transparent text-foreground/80 hover:bg-secondary/75 hover:text-foreground',
   destructive:
     'border border-destructive/35 bg-destructive/10 text-destructive hover:bg-destructive/20 hover:-translate-y-0.5'
 }

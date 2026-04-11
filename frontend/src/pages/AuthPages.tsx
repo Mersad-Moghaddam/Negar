@@ -24,7 +24,7 @@ const wrap = 'app-shell min-h-screen px-4 py-8 md:px-8 md:py-10'
 const formCard = 'glass-panel mx-auto w-full max-w-md space-y-5 p-6 md:p-7'
 
 const FieldError = ({ message }: { message?: string }) =>
-  message ? <p className="text-xs text-destructive">{message}</p> : null
+  message ? <p className="mt-1 text-xs text-destructive">{message}</p> : null
 
 export function Landing() {
   const { t, tm } = useI18n()
@@ -33,9 +33,9 @@ export function Landing() {
 
   return (
     <div className={wrap}>
-      <div className="mx-auto mb-8 flex max-w-6xl items-center justify-between gap-3">
+      <div className="mx-auto mb-10 flex max-w-6xl items-center justify-between gap-3">
         <div>
-          <p className="text-xl font-semibold tracking-tight text-primary">Libro</p>
+          <p className="text-2xl font-semibold tracking-tight text-primary">Libro</p>
           <p className="text-xs text-mutedForeground">{t('landing.eyebrow')}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -45,9 +45,11 @@ export function Landing() {
       </div>
 
       <section className="mx-auto max-w-6xl space-y-10">
-        <div className="grid items-start gap-8 lg:grid-cols-[1.08fr_0.92fr]">
+        <div className="grid items-start gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6">
-            <Badge className="w-fit border border-border bg-secondary text-secondaryForeground">{t('landing.productPreview')}</Badge>
+            <Badge className="w-fit border border-border bg-secondary text-secondaryForeground">
+              {t('landing.productPreview')}
+            </Badge>
             <h1 className="max-w-2xl text-hero text-foreground">{t('landing.title')}</h1>
             <p className="max-w-xl text-body text-mutedForeground">{t('landing.subtitle')}</p>
             <div className="flex flex-wrap gap-3">
@@ -86,7 +88,10 @@ export function Landing() {
                 <div className="mt-3 space-y-2">
                   {[72, 45, 88].map((v) => (
                     <div key={v} className="h-2 rounded-full bg-secondary">
-                      <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${v}%` }} />
+                      <div
+                        className="h-full rounded-full bg-primary transition-all duration-500"
+                        style={{ width: `${v}%` }}
+                      />
                     </div>
                   ))}
                 </div>
@@ -132,6 +137,18 @@ function AuthHeader() {
   )
 }
 
+function AuthFrame({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
+  return (
+    <Card className={formCard}>
+      <div className="space-y-2">
+        <h1 className="text-page-title">{title}</h1>
+        <p className="text-small text-mutedForeground">{subtitle}</p>
+      </div>
+      {children}
+    </Card>
+  )
+}
+
 export function Register() {
   const nav = useNavigate()
   const { t } = useI18n()
@@ -160,9 +177,7 @@ export function Register() {
   return (
     <div className={wrap}>
       <AuthHeader />
-      <Card className={formCard}>
-        <h1 className="text-page-title">{t('auth.createAccount')}</h1>
-        <p className="text-small text-mutedForeground">{t('auth.registerSubtitle')}</p>
+      <AuthFrame title={t('auth.createAccount')} subtitle={t('auth.registerSubtitle')}>
         <form onSubmit={onSubmit} className="space-y-3">
           <div>
             <Input placeholder={t('auth.name')} {...form.register('name')} />
@@ -177,7 +192,11 @@ export function Register() {
             <FieldError message={form.formState.errors.password?.message} />
           </div>
           <div>
-            <Input type="password" placeholder={t('auth.confirmPassword')} {...form.register('confirmPassword')} />
+            <Input
+              type="password"
+              placeholder={t('auth.confirmPassword')}
+              {...form.register('confirmPassword')}
+            />
             <FieldError message={form.formState.errors.confirmPassword?.message} />
           </div>
           <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
@@ -190,7 +209,7 @@ export function Register() {
             </Link>
           </p>
         </form>
-      </Card>
+      </AuthFrame>
     </div>
   )
 }
@@ -223,9 +242,7 @@ export function Login() {
   return (
     <div className={wrap}>
       <AuthHeader />
-      <Card className={formCard}>
-        <h1 className="text-page-title">{t('auth.welcomeBack')}</h1>
-        <p className="text-small text-mutedForeground">{t('auth.loginSubtitle')}</p>
+      <AuthFrame title={t('auth.welcomeBack')} subtitle={t('auth.loginSubtitle')}>
         <form onSubmit={onSubmit} className="space-y-3">
           <div>
             <Input type="email" placeholder={t('auth.email')} {...form.register('email')} />
@@ -245,7 +262,7 @@ export function Login() {
             {t('auth.signUp')}
           </Link>
         </p>
-      </Card>
+      </AuthFrame>
     </div>
   )
 }
