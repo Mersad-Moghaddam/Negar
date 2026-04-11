@@ -1,0 +1,4 @@
+ALTER TABLE users
+  ADD COLUMN reminder_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN reminder_time VARCHAR(5) NOT NULL DEFAULT '20:00',
+  ADD COLUMN reminder_frequency VARCHAR(20) NOT NULL DEFAULT 'daily';

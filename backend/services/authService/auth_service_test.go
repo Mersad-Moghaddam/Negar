@@ -69,8 +69,10 @@ func (f *fakeAuthRepo) DeleteRefreshToken(_ context.Context, tokenID string) err
 	return nil
 }
 
-func (f *fakeAuthRepo) CheckRateLimit(_ context.Context, _ string, _ int64, _ int64) (bool, error) {
-	return true, nil
+func (f *fakeAuthRepo) DeleteRefreshTokensByUser(_ context.Context, _ string) error { return nil }
+
+func (f *fakeAuthRepo) CheckRateLimit(_ context.Context, _ string, _ int64, _ int64) (bool, int64, error) {
+	return true, 2, nil
 }
 
 func newAuthServiceForTest(users *fakeUserRepo, auth *fakeAuthRepo) *Service {
@@ -92,7 +94,7 @@ func TestRegisterLoginAndRefresh(t *testing.T) {
 		t.Fatalf("expected normalized email, got %s", created.Email)
 	}
 
-	loggedInUser, pair, err := svc.Login(context.Background(), "127.0.0.1", "ada@example.com", "123456")
+	loggedInUser, pair, _, err := svc.Login(context.Background(), "127.0.0.1", "ada@example.com", "123456")
 	if err != nil {
 		t.Fatalf("login failed: %v", err)
 	}

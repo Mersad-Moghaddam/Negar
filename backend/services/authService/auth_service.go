@@ -49,20 +49,23 @@ func (s *Service) Register(ctx context.Context, name, email, password string) (*
 	return u, s.users.Create(ctx, u)
 }
 
-func (s *Service) Login(ctx context.Context, ip, email, password string) (*user.User, *auth.TokenPair, error) {
-	ok, err := s.auth.CheckRateLimit(ctx, fmt.Sprintf("auth:login:%s", ip), s.rateMax, int64(s.rateWindow.Seconds()))
+func (s *Service) Login(ctx context.Context, ip, email, password string) (*user.User, *auth.TokenPair, int64, error) {
+	ok, remaining, err := s.auth.CheckRateLimit(ctx, fmt.Sprintf("auth:login:%s", ip), s.rateMax, int64(s.rateWindow.Seconds()))
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, err
 	}
 	if !ok {
-		return nil, nil, customErr.ErrRateLimited
+		return nil, nil, 0, customErr.ErrRateLimited
 	}
 	u, err := s.users.GetByEmail(ctx, strings.ToLower(strings.TrimSpace(email)))
 	if err != nil || security.ComparePassword(u.PasswordHash, password) != nil {
-		return nil, nil, customErr.ErrUnauthorized
+		return nil, nil, remaining, customErr.ErrUnauthorized
+	}
+	if err = s.auth.DeleteRefreshTokensByUser(ctx, u.ID.String()); err != nil {
+		return nil, nil, remaining, err
 	}
 	t, err := s.createTokens(ctx, u.ID.String())
-	return u, t, err
+	return u, t, remaining, err
 }
 
 func (s *Service) Refresh(ctx context.Context, refreshToken string) (*auth.TokenPair, error) {

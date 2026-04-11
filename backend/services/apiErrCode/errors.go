@@ -5,23 +5,23 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
+	"libro-backend/pkg/apiresponse"
 	"libro-backend/statics/customErr"
-	"libro-backend/statics/translate"
 )
 
 func RespondError(c *fiber.Ctx, err error) error {
 	switch {
 	case errors.Is(err, customErr.ErrBadRequest):
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": translate.Messages["invalidRequest"]})
+		return apiresponse.Error(c, fiber.StatusBadRequest, "bad_request", "Invalid request", nil)
 	case errors.Is(err, customErr.ErrUnauthorized):
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": translate.Messages["unauthorized"]})
+		return apiresponse.Error(c, fiber.StatusUnauthorized, "unauthorized", "Unauthorized", nil)
 	case errors.Is(err, customErr.ErrConflict):
-		return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": translate.Messages["alreadyExists"]})
+		return apiresponse.Error(c, fiber.StatusConflict, "conflict", "Resource conflict", nil)
 	case errors.Is(err, customErr.ErrNotFound), errors.Is(err, gorm.ErrRecordNotFound):
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": translate.Messages["notFound"]})
+		return apiresponse.Error(c, fiber.StatusNotFound, "not_found", "Resource not found", nil)
 	case errors.Is(err, customErr.ErrRateLimited):
-		return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{"error": translate.Messages["rateLimited"]})
+		return apiresponse.Error(c, fiber.StatusTooManyRequests, "rate_limited", "Too many requests", nil)
 	default:
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": translate.Messages["internal"]})
+		return apiresponse.Error(c, fiber.StatusInternalServerError, "internal_error", "Internal server error", nil)
 	}
 }

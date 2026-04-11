@@ -4,6 +4,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"libro-backend/apiSchema/readingSchema"
+	"libro-backend/pkg/apiresponse"
+	"libro-backend/pkg/validation"
 	"libro-backend/services/apiErrCode"
 	"libro-backend/services/readingService"
 )
@@ -21,6 +23,11 @@ func (h *ReadingController) UpdateProgress(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return apiErrCode.RespondError(c, err)
 	}
+	errs := validation.Errors{}
+	validation.MinInt(req.CurrentPage, "currentPage", 0, errs)
+	if errs.HasAny() {
+		return apiresponse.ValidationError(c, errs)
+	}
 	uid, _ := uuid.Parse(c.Locals("userID").(string))
 	id, _ := uuid.Parse(c.Params("id"))
 	b, err := h.service.Reading.UpdateProgress(c.Context(), uid, id, req.CurrentPage)
@@ -35,5 +42,5 @@ func (h *ReadingController) UpdateProgress(c *fiber.Ctx) error {
 	if b.TotalPages > 0 {
 		percentage = int(float64(req.CurrentPage) / float64(b.TotalPages) * 100)
 	}
-	return c.JSON(fiber.Map{"id": b.ID, "status": b.Status, "currentPage": b.CurrentPage, "remainingPages": remaining, "progressPercentage": percentage})
+	return apiresponse.OK(c, fiber.Map{"id": b.ID, "status": b.Status, "currentPage": b.CurrentPage, "remainingPages": remaining, "progressPercentage": percentage}, nil)
 }

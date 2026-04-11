@@ -1,9 +1,11 @@
 package core
 
 import (
+	"log/slog"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"libro-backend/controllers/authController"
 	"libro-backend/controllers/bookController"
 	"libro-backend/controllers/mainController"
@@ -11,13 +13,15 @@ import (
 	"libro-backend/controllers/userController"
 	"libro-backend/controllers/wishlistController"
 	"libro-backend/middleware/auth"
+	"libro-backend/middleware/requestctx"
 	"libro-backend/statics/configs"
 )
 
-func NewServer(cfg *configs.Config, deps mainController.ControllerDeps) *fiber.App {
+func NewServer(cfg *configs.Config, deps mainController.ControllerDeps, logger *slog.Logger) *fiber.App {
 	app := fiber.New()
-	app.Use(logger.New())
-	app.Use(cors.New(cors.Config{AllowOrigins: cfg.FrontendURL, AllowHeaders: "Origin, Content-Type, Accept, Authorization"}))
+	app.Use(requestid.New())
+	app.Use(requestctx.RequestLogger(logger))
+	app.Use(cors.New(cors.Config{AllowOrigins: cfg.FrontendURL, AllowHeaders: "Origin, Content-Type, Accept, Authorization, X-Request-ID"}))
 
 	mainCtrl := mainController.NewMainController(deps.Main)
 	authCtrl := authController.NewAuthController(deps.Auth)
@@ -27,6 +31,7 @@ func NewServer(cfg *configs.Config, deps mainController.ControllerDeps) *fiber.A
 	userCtrl := userController.NewUserController(deps.User)
 
 	app.Get("/health", mainCtrl.Health)
+	app.Get("/ready", mainCtrl.Ready)
 
 	api := app.Group("/api/v1")
 	authRoutes := api.Group("/auth")

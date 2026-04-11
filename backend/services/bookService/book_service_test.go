@@ -16,12 +16,12 @@ type fakeBookRepo struct {
 	items map[uuid.UUID]book.Book
 }
 
-func (f *fakeBookRepo) List(_ context.Context, _ uuid.UUID, _ repositories.BookFilter) ([]book.Book, error) {
+func (f *fakeBookRepo) List(_ context.Context, _ uuid.UUID, _ repositories.BookFilter) ([]book.Book, int64, error) {
 	result := make([]book.Book, 0, len(f.items))
 	for _, b := range f.items {
 		result = append(result, b)
 	}
-	return result, nil
+	return result, int64(len(result)), nil
 }
 
 func (f *fakeBookRepo) Create(_ context.Context, b *book.Book) error {

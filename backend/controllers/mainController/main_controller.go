@@ -2,6 +2,7 @@ package mainController
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"libro-backend/pkg/apiresponse"
 	"libro-backend/services/apiErrCode"
 	"libro-backend/services/bookService"
 	"libro-backend/statics/constants"
@@ -16,7 +17,11 @@ func NewMainController(service *MainService) *MainController {
 }
 
 func (c *MainController) Health(ctx *fiber.Ctx) error {
-	return ctx.JSON(fiber.Map{"status": constants.HealthStatusOK})
+	return apiresponse.OK(ctx, fiber.Map{"status": constants.HealthStatusOK}, nil)
+}
+
+func (c *MainController) Ready(ctx *fiber.Ctx) error {
+	return apiresponse.OK(ctx, fiber.Map{"status": constants.HealthStatusOK}, nil)
 }
 
 func (c *MainController) DashboardSummary(ctx *fiber.Ctx) error {
@@ -25,7 +30,7 @@ func (c *MainController) DashboardSummary(ctx *fiber.Ctx) error {
 	if err != nil {
 		return apiErrCode.RespondError(ctx, err)
 	}
-	return ctx.JSON(fiber.Map{"counts": counts, "recentBooks": withBooksComputed(recent), "currentlyReading": withBooksComputed(reading)})
+	return apiresponse.OK(ctx, fiber.Map{"counts": counts, "recentBooks": withBooksComputed(recent), "currentlyReading": withBooksComputed(reading)}, nil)
 }
 
 func (c *MainController) DashboardAnalytics(ctx *fiber.Ctx) error {
@@ -34,7 +39,7 @@ func (c *MainController) DashboardAnalytics(ctx *fiber.Ctx) error {
 	if err != nil {
 		return apiErrCode.RespondError(ctx, err)
 	}
-	return ctx.JSON(analytics)
+	return apiresponse.OK(ctx, analytics, nil)
 }
 
 func (c *MainController) DashboardInsights(ctx *fiber.Ctx) error {
@@ -43,5 +48,5 @@ func (c *MainController) DashboardInsights(ctx *fiber.Ctx) error {
 	if err != nil {
 		return apiErrCode.RespondError(ctx, err)
 	}
-	return ctx.JSON(fiber.Map{"items": insights})
+	return apiresponse.OK(ctx, fiber.Map{"items": insights}, nil)
 }

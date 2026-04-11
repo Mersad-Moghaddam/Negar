@@ -10,16 +10,32 @@ import (
 	"libro-backend/models/wishlist"
 )
 
+type PageFilter struct {
+	Page  int
+	Limit int
+}
+
 type BookFilter struct {
 	Search string
 	Status string
+	SortBy string
+	Order  string
+	PageFilter
+}
+
+type WishlistFilter struct {
+	Search string
+	SortBy string
+	Order  string
+	PageFilter
 }
 
 type AuthRepository interface {
 	SetRefreshToken(ctx context.Context, tokenID, userID string, ttlSeconds int64) error
 	GetRefreshTokenUser(ctx context.Context, tokenID string) (string, error)
 	DeleteRefreshToken(ctx context.Context, tokenID string) error
-	CheckRateLimit(ctx context.Context, key string, max int64, windowSeconds int64) (bool, error)
+	DeleteRefreshTokensByUser(ctx context.Context, userID string) error
+	CheckRateLimit(ctx context.Context, key string, max int64, windowSeconds int64) (bool, int64, error)
 }
 
 type UserRepository interface {
@@ -30,7 +46,7 @@ type UserRepository interface {
 }
 
 type BookRepository interface {
-	List(ctx context.Context, userID uuid.UUID, filter BookFilter) ([]book.Book, error)
+	List(ctx context.Context, userID uuid.UUID, filter BookFilter) ([]book.Book, int64, error)
 	Create(ctx context.Context, b *book.Book) error
 	GetByID(ctx context.Context, userID, bookID uuid.UUID) (*book.Book, error)
 	Update(ctx context.Context, b *book.Book) error
@@ -40,7 +56,7 @@ type BookRepository interface {
 }
 
 type WishlistRepository interface {
-	List(ctx context.Context, userID uuid.UUID) ([]wishlist.Wishlist, error)
+	List(ctx context.Context, userID uuid.UUID, filter WishlistFilter) ([]wishlist.Wishlist, int64, error)
 	Create(ctx context.Context, w *wishlist.Wishlist) error
 	GetByID(ctx context.Context, userID, id uuid.UUID) (*wishlist.Wishlist, error)
 	Update(ctx context.Context, w *wishlist.Wishlist) error

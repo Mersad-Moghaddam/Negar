@@ -1,17 +1,28 @@
 package bookController
 
 import (
+	"strconv"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"libro-backend/apiSchema/bookSchema"
 	"libro-backend/models/book"
+	"libro-backend/models/commonPagination"
+	"libro-backend/pkg/apiresponse"
+	"libro-backend/pkg/pagination"
+	"libro-backend/pkg/validation"
+	"libro-backend/repositories"
 	"libro-backend/services/apiErrCode"
 	"libro-backend/services/bookService"
+	"libro-backend/statics/constants"
 )
 
 type ServiceBridge struct{ Book *bookService.Service }
 
 type BookController struct{ service *ServiceBridge }
+
+var allowedBookSort = map[string]struct{}{"title": {}, "created_at": {}, "updated_at": {}, "status": {}}
+var allowedBookStatus = map[string]struct{}{constants.BookStatusInLibrary: {}, constants.BookStatusCurrentlyRead: {}, constants.BookStatusFinished: {}, constants.BookStatusNextToRead: {}}
 
 func NewBookController(service *ServiceBridge) *BookController {
 	return &BookController{service: service}
@@ -19,23 +30,38 @@ func NewBookController(service *ServiceBridge) *BookController {
 
 func (h *BookController) List(c *fiber.Ctx) error {
 	uid, _ := uuid.Parse(c.Locals("userID").(string))
-	books, err := h.service.Book.List(c.Context(), uid, c.Query("search"), c.Query("status"))
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	limit, _ := strconv.Atoi(c.Query("limit", "20"))
+	page, limit = pagination.Normalize(page, limit)
+	sortBy := c.Query("sortBy", "updated_at")
+	order := c.Query("order", "desc")
+	if _, ok := allowedBookSort[sortBy]; !ok {
+		sortBy = "updated_at"
+	}
+	if order != "asc" {
+		order = "desc"
+	}
+	books, total, err := h.service.Book.List(c.Context(), uid, repositories.BookFilter{Search: c.Query("search"), Status: c.Query("status"), SortBy: sortBy, Order: order, PageFilter: repositories.PageFilter{Page: page, Limit: limit}})
 	if err != nil {
 		return apiErrCode.RespondError(c, err)
 	}
-	return c.JSON(withBooksComputed(books))
+	meta := commonPagination.Meta{Page: page, Limit: limit, Total: total, HasNext: int64(page*limit) < total}
+	return apiresponse.OK(c, withBooksComputed(books), meta)
 }
 func (h *BookController) Create(c *fiber.Ctx) error {
 	var req bookSchema.BookRequest
 	if err := c.BodyParser(&req); err != nil {
 		return apiErrCode.RespondError(c, err)
 	}
+	if errs := validateBookRequest(req); errs.HasAny() {
+		return apiresponse.ValidationError(c, errs)
+	}
 	uid, _ := uuid.Parse(c.Locals("userID").(string))
 	b := &book.Book{UserID: uid, Title: req.Title, Author: req.Author, TotalPages: req.TotalPages, Status: req.Status}
 	if err := h.service.Book.Create(c.Context(), b); err != nil {
 		return apiErrCode.RespondError(c, err)
 	}
-	return c.Status(fiber.StatusCreated).JSON(withBookComputed(b))
+	return apiresponse.Created(c, withBookComputed(b))
 }
 func (h *BookController) Get(c *fiber.Ctx) error {
 	uid, _ := uuid.Parse(c.Locals("userID").(string))
@@ -44,7 +70,7 @@ func (h *BookController) Get(c *fiber.Ctx) error {
 	if err != nil {
 		return apiErrCode.RespondError(c, err)
 	}
-	return c.JSON(withBookComputed(b))
+	return apiresponse.OK(c, withBookComputed(b), nil)
 }
 func (h *BookController) Update(c *fiber.Ctx) error {
 	uid, _ := uuid.Parse(c.Locals("userID").(string))
@@ -57,11 +83,14 @@ func (h *BookController) Update(c *fiber.Ctx) error {
 	if err = c.BodyParser(&req); err != nil {
 		return apiErrCode.RespondError(c, err)
 	}
+	if errs := validateBookRequest(req); errs.HasAny() {
+		return apiresponse.ValidationError(c, errs)
+	}
 	b.Title, b.Author, b.TotalPages, b.Status = req.Title, req.Author, req.TotalPages, req.Status
 	if err = h.service.Book.Update(c.Context(), b); err != nil {
 		return apiErrCode.RespondError(c, err)
 	}
-	return c.JSON(withBookComputed(b))
+	return apiresponse.OK(c, withBookComputed(b), nil)
 }
 func (h *BookController) Delete(c *fiber.Ctx) error {
 	uid, _ := uuid.Parse(c.Locals("userID").(string))
@@ -69,12 +98,18 @@ func (h *BookController) Delete(c *fiber.Ctx) error {
 	if err := h.service.Book.Delete(c.Context(), uid, id); err != nil {
 		return apiErrCode.RespondError(c, err)
 	}
-	return c.JSON(fiber.Map{"message": "deleted"})
+	return apiresponse.OK(c, fiber.Map{"message": "deleted"}, nil)
 }
 func (h *BookController) UpdateStatus(c *fiber.Ctx) error {
 	var req bookSchema.BookStatusRequest
 	if err := c.BodyParser(&req); err != nil {
 		return apiErrCode.RespondError(c, err)
+	}
+	errFields := validation.Errors{}
+	req.Status = validation.Required(req.Status, "status", errFields)
+	validation.Enum(req.Status, "status", allowedBookStatus, errFields)
+	if errFields.HasAny() {
+		return apiresponse.ValidationError(c, errFields)
 	}
 	uid, _ := uuid.Parse(c.Locals("userID").(string))
 	id, _ := uuid.Parse(c.Params("id"))
@@ -82,7 +117,19 @@ func (h *BookController) UpdateStatus(c *fiber.Ctx) error {
 	if err != nil {
 		return apiErrCode.RespondError(c, err)
 	}
-	return c.JSON(withBookComputed(b))
+	return apiresponse.OK(c, withBookComputed(b), nil)
+}
+
+func validateBookRequest(req bookSchema.BookRequest) validation.Errors {
+	errs := validation.Errors{}
+	req.Title = validation.Required(req.Title, "title", errs)
+	req.Author = validation.Required(req.Author, "author", errs)
+	req.Status = validation.Required(req.Status, "status", errs)
+	validation.StringLength(req.Title, "title", 1, 200, errs)
+	validation.StringLength(req.Author, "author", 1, 200, errs)
+	validation.Enum(req.Status, "status", allowedBookStatus, errs)
+	validation.MinInt(req.TotalPages, "totalPages", 1, errs)
+	return errs
 }
 
 func withBooksComputed(books []book.Book) []map[string]any {

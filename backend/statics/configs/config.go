@@ -26,53 +26,104 @@ type Config struct {
 }
 
 func Load() (*Config, error) {
-	redisDB, err := strconv.Atoi(getEnv("REDIS_DB", "0"))
+	appPort, err := requiredEnv("APP_PORT")
 	if err != nil {
-		return nil, fmt.Errorf("invalid REDIS_DB: %w", err)
+		return nil, err
 	}
-	accessTTL, err := time.ParseDuration(getEnv("ACCESS_TOKEN_TTL", "15m"))
+	jwtSecret, err := requiredEnv("JWT_SECRET")
 	if err != nil {
-		return nil, fmt.Errorf("invalid ACCESS_TOKEN_TTL: %w", err)
+		return nil, err
 	}
-	refreshTTL, err := time.ParseDuration(getEnv("REFRESH_TOKEN_TTL", "168h"))
+	if len(jwtSecret) < 32 {
+		return nil, fmt.Errorf("JWT_SECRET must be at least 32 chars")
+	}
+	redisDB, err := parseInt("REDIS_DB")
 	if err != nil {
-		return nil, fmt.Errorf("invalid REFRESH_TOKEN_TTL: %w", err)
+		return nil, err
 	}
-	rateWindow, err := time.ParseDuration(getEnv("AUTH_RATE_LIMIT_WINDOW", "1m"))
+	accessTTL, err := parseDuration("ACCESS_TOKEN_TTL")
 	if err != nil {
-		return nil, fmt.Errorf("invalid AUTH_RATE_LIMIT_WINDOW: %w", err)
+		return nil, err
 	}
-	rateMax, err := strconv.ParseInt(getEnv("AUTH_RATE_LIMIT_MAX", "20"), 10, 64)
+	refreshTTL, err := parseDuration("REFRESH_TOKEN_TTL")
+	if err != nil {
+		return nil, err
+	}
+	rateWindow, err := parseDuration("AUTH_RATE_LIMIT_WINDOW")
+	if err != nil {
+		return nil, err
+	}
+	rateMaxRaw, err := requiredEnv("AUTH_RATE_LIMIT_MAX")
+	if err != nil {
+		return nil, err
+	}
+	rateMax, err := strconv.ParseInt(rateMaxRaw, 10, 64)
 	if err != nil {
 		return nil, fmt.Errorf("invalid AUTH_RATE_LIMIT_MAX: %w", err)
 	}
+	mysqlHost, err := requiredEnv("MYSQL_HOST")
+	if err != nil {
+		return nil, err
+	}
+	mysqlPort, err := requiredEnv("MYSQL_PORT")
+	if err != nil {
+		return nil, err
+	}
+	mysqlUser, err := requiredEnv("MYSQL_USER")
+	if err != nil {
+		return nil, err
+	}
+	mysqlPassword, err := requiredEnv("MYSQL_PASSWORD")
+	if err != nil {
+		return nil, err
+	}
+	mysqlDatabase, err := requiredEnv("MYSQL_DATABASE")
+	if err != nil {
+		return nil, err
+	}
+	redisAddr, err := requiredEnv("REDIS_ADDR")
+	if err != nil {
+		return nil, err
+	}
+	frontendURL, err := requiredEnv("FRONTEND_URL")
+	if err != nil {
+		return nil, err
+	}
 
-	return &Config{
-		AppPort:              getEnv("APP_PORT", "8080"),
-		JWTSecret:            getEnv("JWT_SECRET", "super-secret-change-me"),
-		AccessTokenTTL:       accessTTL,
-		RefreshTokenTTL:      refreshTTL,
-		MySQLHost:            getEnv("MYSQL_HOST", "localhost"),
-		MySQLPort:            getEnv("MYSQL_PORT", "3306"),
-		MySQLUser:            getEnv("MYSQL_USER", "root"),
-		MySQLPassword:        getEnv("MYSQL_PASSWORD", "root"),
-		MySQLDatabase:        getEnv("MYSQL_DATABASE", "libro"),
-		RedisAddr:            getEnv("REDIS_ADDR", "localhost:6379"),
-		RedisPassword:        getEnv("REDIS_PASSWORD", ""),
-		RedisDB:              redisDB,
-		RateLimitWindow:      rateWindow,
-		RateLimitMaxAttempts: rateMax,
-		FrontendURL:          getEnv("FRONTEND_URL", "http://localhost:5173"),
-	}, nil
+	return &Config{AppPort: appPort, JWTSecret: jwtSecret, AccessTokenTTL: accessTTL, RefreshTokenTTL: refreshTTL, MySQLHost: mysqlHost, MySQLPort: mysqlPort, MySQLUser: mysqlUser, MySQLPassword: mysqlPassword, MySQLDatabase: mysqlDatabase, RedisAddr: redisAddr, RedisPassword: os.Getenv("REDIS_PASSWORD"), RedisDB: redisDB, RateLimitWindow: rateWindow, RateLimitMaxAttempts: rateMax, FrontendURL: frontendURL}, nil
 }
 
 func (c *Config) MySQLDSN() string {
 	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", c.MySQLUser, c.MySQLPassword, c.MySQLHost, c.MySQLPort, c.MySQLDatabase)
 }
 
-func getEnv(key, fallback string) string {
+func requiredEnv(key string) (string, error) {
 	if v := os.Getenv(key); v != "" {
-		return v
+		return v, nil
 	}
-	return fallback
+	return "", fmt.Errorf("missing required env: %s", key)
+}
+
+func parseDuration(key string) (time.Duration, error) {
+	v, err := requiredEnv(key)
+	if err != nil {
+		return 0, err
+	}
+	d, err := time.ParseDuration(v)
+	if err != nil {
+		return 0, fmt.Errorf("invalid %s: %w", key, err)
+	}
+	return d, nil
+}
+
+func parseInt(key string) (int, error) {
+	v, err := requiredEnv(key)
+	if err != nil {
+		return 0, err
+	}
+	iv, err := strconv.Atoi(v)
+	if err != nil {
+		return 0, fmt.Errorf("invalid %s: %w", key, err)
+	}
+	return iv, nil
 }

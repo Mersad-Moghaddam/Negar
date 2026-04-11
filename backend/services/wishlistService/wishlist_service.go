@@ -21,8 +21,8 @@ func New(wishlistRepo repositories.WishlistRepository, linkRepo repositories.Pur
 	return &Service{wishlist: wishlistRepo, links: linkRepo}
 }
 
-func (s *Service) List(ctx context.Context, userID uuid.UUID) ([]wishlist.Wishlist, error) {
-	return s.wishlist.List(ctx, userID)
+func (s *Service) List(ctx context.Context, userID uuid.UUID, filter repositories.WishlistFilter) ([]wishlist.Wishlist, int64, error) {
+	return s.wishlist.List(ctx, userID, filter)
 }
 func (s *Service) Create(ctx context.Context, w *wishlist.Wishlist) error {
 	if w.Title == "" || w.Author == "" {

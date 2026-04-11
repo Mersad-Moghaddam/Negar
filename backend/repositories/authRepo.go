@@ -21,15 +21,32 @@ func (r *authRepo) GetRefreshTokenUser(ctx context.Context, tokenID string) (str
 func (r *authRepo) DeleteRefreshToken(ctx context.Context, tokenID string) error {
 	return r.client.Del(ctx, fmt.Sprintf("refresh:%s", tokenID)).Err()
 }
-func (r *authRepo) CheckRateLimit(ctx context.Context, key string, max int64, windowSeconds int64) (bool, error) {
+func (r *authRepo) DeleteRefreshTokensByUser(ctx context.Context, userID string) error {
+	iter := r.client.Scan(ctx, 0, "refresh:*", 0).Iterator()
+	for iter.Next(ctx) {
+		key := iter.Val()
+		val, err := r.client.Get(ctx, key).Result()
+		if err == nil && val == userID {
+			if delErr := r.client.Del(ctx, key).Err(); delErr != nil {
+				return delErr
+			}
+		}
+	}
+	return iter.Err()
+}
+func (r *authRepo) CheckRateLimit(ctx context.Context, key string, max int64, windowSeconds int64) (bool, int64, error) {
 	current, err := r.client.Incr(ctx, key).Result()
 	if err != nil {
-		return false, err
+		return false, 0, err
 	}
 	if current == 1 {
 		if err = r.client.Expire(ctx, key, time.Duration(windowSeconds)*time.Second).Err(); err != nil {
-			return false, err
+			return false, 0, err
 		}
 	}
-	return current <= max, nil
+	remaining := max - current
+	if remaining < 0 {
+		remaining = 0
+	}
+	return current <= max, remaining, nil
 }

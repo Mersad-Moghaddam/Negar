@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -14,16 +15,29 @@ type bookRepo struct{ db *gorm.DB }
 
 func NewBookRepo(db *gorm.DB) BookRepository { return &bookRepo{db: db} }
 
-func (r *bookRepo) List(ctx context.Context, userID uuid.UUID, filter BookFilter) ([]book.Book, error) {
-	q := r.db.WithContext(ctx).Where("user_id = ?", userID)
+func (r *bookRepo) List(ctx context.Context, userID uuid.UUID, filter BookFilter) ([]book.Book, int64, error) {
+	q := r.db.WithContext(ctx).Model(&book.Book{}).Where("user_id = ?", userID)
 	if filter.Search != "" {
 		q = q.Where("title LIKE ? OR author LIKE ?", "%"+filter.Search+"%", "%"+filter.Search+"%")
 	}
 	if filter.Status != "" {
 		q = q.Where("status = ?", filter.Status)
 	}
+	var total int64
+	if err := q.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	orderBy := "updated_at"
+	if filter.SortBy != "" {
+		orderBy = filter.SortBy
+	}
+	order := "DESC"
+	if filter.Order != "" {
+		order = filter.Order
+	}
 	var books []book.Book
-	return books, q.Order("updated_at DESC").Find(&books).Error
+	err := q.Order(fmt.Sprintf("%s %s", orderBy, order)).Offset((filter.Page - 1) * filter.Limit).Limit(filter.Limit).Find(&books).Error
+	return books, total, err
 }
 func (r *bookRepo) Create(ctx context.Context, b *book.Book) error {
 	return r.db.WithContext(ctx).Create(b).Error
