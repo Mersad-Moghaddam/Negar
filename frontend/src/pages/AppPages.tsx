@@ -100,7 +100,7 @@ export function Dashboard() {
   const saveGoal = useSaveGoalMutation()
   const createSession = useCreateSessionMutation()
 
-  const books = booksQuery.data ?? []
+  const books = useMemo(() => booksQuery.data ?? [], [booksQuery.data])
   const analytics = analyticsQuery.data
   const insights = insightsQuery.data ?? []
   const reminder = reminderQuery.data

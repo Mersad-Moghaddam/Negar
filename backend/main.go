@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -23,23 +22,28 @@ import (
 func main() {
 	_ = godotenv.Load("dev.env")
 
+	logger := requestctx.NewLogger()
+
 	cfg, err := configs.Load()
 	if err != nil {
-		log.Fatal(err)
+		logger.Error("config_load_failed", "error", err.Error())
+		os.Exit(1)
 	}
-	logger := requestctx.NewLogger()
 
 	db, err := gorm.Open(mysql.Open(cfg.MySQLDSN()), &gorm.Config{})
 	if err != nil {
-		log.Fatal(err)
+		logger.Error("mysql_connect_failed", "error", err.Error())
+		os.Exit(1)
 	}
 	if err = repositories.AssertSchema(db); err != nil {
-		log.Fatal(err)
+		logger.Error("schema_check_failed", "error", err.Error())
+		os.Exit(1)
 	}
 
 	rdb := redis.NewClient(&redis.Options{Addr: cfg.RedisAddr, Password: cfg.RedisPassword, DB: cfg.RedisDB})
 	if err = rdb.Ping(context.Background()).Err(); err != nil {
-		log.Fatal(err)
+		logger.Error("redis_connect_failed", "error", err.Error())
+		os.Exit(1)
 	}
 
 	deps := initRepositories.New(db, rdb)
@@ -56,10 +60,11 @@ func main() {
 
 	select {
 	case sig := <-sigCh:
-		log.Printf("received signal %s", sig)
+		logger.Info("shutdown_signal", "signal", sig.String())
 	case listenErr := <-listenErrCh:
 		if listenErr != nil {
-			log.Fatal(listenErr)
+			logger.Error("http_server_stopped", "error", listenErr.Error())
+			os.Exit(1)
 		}
 		return
 	}

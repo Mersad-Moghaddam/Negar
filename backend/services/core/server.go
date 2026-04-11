@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/gofiber/fiber/v2"
@@ -18,7 +19,28 @@ import (
 )
 
 func NewServer(cfg *configs.Config, deps mainController.ControllerDeps, logger *slog.Logger) *fiber.App {
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			status := fiber.StatusInternalServerError
+			message := "unexpected server error"
+			if fiberErr, ok := err.(*fiber.Error); ok {
+				status = fiberErr.Code
+				message = fiberErr.Message
+			}
+			logger.Error("request_failed",
+				slog.String("requestId", c.GetRespHeader("X-Request-ID")),
+				slog.String("method", c.Method()),
+				slog.String("path", c.Path()),
+				slog.Int("status", status),
+				slog.String("error", err.Error()),
+			)
+			return c.Status(status).JSON(fiber.Map{
+				"code":    "request_failed",
+				"message": message,
+				"details": fmt.Sprintf("request_id=%s", c.GetRespHeader("X-Request-ID")),
+			})
+		},
+	})
 	app.Use(requestid.New())
 	app.Use(requestctx.RequestLogger(logger))
 	app.Use(cors.New(cors.Config{AllowOrigins: cfg.FrontendURL, AllowHeaders: "Origin, Content-Type, Accept, Authorization, X-Request-ID"}))

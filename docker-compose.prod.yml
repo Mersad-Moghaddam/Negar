@@ -1,28 +1,28 @@
 services:
   mysql:
     image: mysql:8.4
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-libro}
-    ports:
-      - '3306:3306'
     volumes:
       - mysql_data:/var/lib/mysql
 
   redis:
     image: redis:7-alpine
-    ports:
-      - '6379:6379'
+    restart: unless-stopped
 
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
+    restart: unless-stopped
     env_file:
       - ./backend/dev.env
     environment:
       MYSQL_HOST: mysql
       REDIS_ADDR: redis:6379
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
     depends_on:
       - mysql
       - redis
@@ -32,13 +32,12 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
-    environment:
-      VITE_API_URL: ${VITE_API_URL:-http://localhost:8080/api/v1}
+      dockerfile: Dockerfile
+    restart: unless-stopped
     depends_on:
       - backend
     ports:
-      - '5173:5173'
+      - '80:80'
 
 volumes:
   mysql_data:
