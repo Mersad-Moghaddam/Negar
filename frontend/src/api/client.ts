@@ -1,6 +1,7 @@
 import axios from 'axios'
 
 import { authStore } from '../contexts/authStore'
+import { extractData } from './http'
 
 const configuredBaseURL = import.meta.env.VITE_API_URL || '/api/v1'
 const baseURL = configuredBaseURL.replace(/\/+$/, '')
@@ -23,8 +24,9 @@ api.interceptors.response.use(
       orig._retry = true
       try {
         const res = await axios.post(`${baseURL}/auth/refresh`, { refreshToken })
-        const nextAccess = res.data?.tokens?.accessToken
-        const nextRefresh = res.data?.tokens?.refreshToken
+        const payload = extractData<{ tokens: { accessToken: string; refreshToken: string } }>(res)
+        const nextAccess = payload?.tokens?.accessToken
+        const nextRefresh = payload?.tokens?.refreshToken
         if (!nextAccess || !nextRefresh) {
           throw new Error('refresh payload missing tokens')
         }

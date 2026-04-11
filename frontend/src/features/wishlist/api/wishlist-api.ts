@@ -1,11 +1,12 @@
 import api from '../../../api/client'
+import { extractData } from '../../../api/http'
 import { WishlistItem } from '../../../types'
 
 const asItems = <T,>(data: T[] | { items: T[] }) => (Array.isArray(data) ? data : data.items)
 
 export async function fetchWishlist() {
   const response = await api.get<WishlistItem[] | { items: WishlistItem[] }>('/wishlist')
-  return asItems(response.data)
+  return asItems(extractData(response))
 }
 
 export async function addWishlistItem(payload: {

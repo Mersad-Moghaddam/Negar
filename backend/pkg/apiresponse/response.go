@@ -29,5 +29,5 @@ func Error(c *fiber.Ctx, status int, code, message string, details any) error {
 }
 
 func ValidationError(c *fiber.Ctx, fields map[string]string) error {
-	return Error(c, fiber.StatusBadRequest, "validation_error", "Request validation failed", ValidationDetails{Fields: fields})
+	return Error(c, fiber.StatusBadRequest, "validation_error", "Invalid request data.", fields)
 }

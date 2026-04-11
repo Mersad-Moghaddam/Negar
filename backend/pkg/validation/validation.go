@@ -2,6 +2,7 @@ package validation
 
 import (
 	"fmt"
+	"net/mail"
 	"strings"
 )
 
@@ -45,5 +46,14 @@ func MinInt(value int, field string, min int, errs Errors) {
 func MinFloat(value float64, field string, min float64, errs Errors) {
 	if value < min {
 		errs.Add(field, fmt.Sprintf("must be >= %.2f", min))
+	}
+}
+
+func Email(value, field string, errs Errors) {
+	if value == "" {
+		return
+	}
+	if _, err := mail.ParseAddress(value); err != nil {
+		errs.Add(field, "is invalid")
 	}
 }

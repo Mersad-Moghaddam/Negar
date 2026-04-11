@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { ThemeToggle } from '../components/ThemeToggle'
+import { parseApiError } from '../api/http'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
@@ -126,8 +127,21 @@ export function Register() {
       await registerMutation.mutateAsync(values)
       toast.success(t('auth.signUp'))
       nav('/login')
-    } catch {
-      toast.error(t('auth.registrationFailed'))
+    } catch (error) {
+      const apiError = parseApiError(error)
+      if (apiError.code === 'email_already_exists') {
+        toast.error(t('auth.emailAlreadyExists'))
+        return
+      }
+      if (apiError.code === 'validation_error') {
+        toast.error(t('auth.missingFields'))
+        return
+      }
+      if (apiError.code === 'network_error') {
+        toast.error(t('auth.networkFailure'))
+        return
+      }
+      toast.error(apiError.message ?? t('auth.unexpectedServerError'))
     }
   })
 
@@ -185,8 +199,21 @@ export function Login() {
       await loginMutation.mutateAsync(values)
       toast.success(t('auth.welcomeBack'))
       nav('/dashboard')
-    } catch {
-      toast.error(t('auth.invalidCredentials'))
+    } catch (error) {
+      const apiError = parseApiError(error)
+      if (apiError.code === 'invalid_credentials') {
+        toast.error(t('auth.invalidCredentials'))
+        return
+      }
+      if (apiError.code === 'validation_error') {
+        toast.error(t('auth.missingFields'))
+        return
+      }
+      if (apiError.code === 'network_error') {
+        toast.error(t('auth.networkFailure'))
+        return
+      }
+      toast.error(apiError.message ?? t('auth.unexpectedServerError'))
     }
   })
 
