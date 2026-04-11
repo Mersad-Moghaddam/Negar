@@ -1,4 +1,4 @@
-.PHONY: dev dev-backend dev-frontend build test lint format
+.PHONY: dev dev-backend dev-frontend build test lint format seed prod-up
 
 dev:
 	@echo "Starting backend and frontend in parallel (requires two terminals for logs)."
@@ -25,3 +25,9 @@ lint:
 format:
 	cd backend && gofmt -w $(shell find . -name '*.go' -not -path './vendor/*')
 	cd frontend && npm run format
+
+seed:
+	docker compose exec -T mysql mysql -uroot -p$${MYSQL_ROOT_PASSWORD:-root} $${MYSQL_DATABASE:-libro} < backend/seeds/seed.sql
+
+prod-up:
+	docker compose -f docker-compose.prod.yml up --build -d

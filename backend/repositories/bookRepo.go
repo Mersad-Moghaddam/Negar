@@ -73,18 +73,24 @@ func (r *bookRepo) Delete(ctx context.Context, userID, bookID uuid.UUID) error {
 }
 func (r *bookRepo) SummaryCounts(ctx context.Context, userID uuid.UUID) (map[string]int64, error) {
 	counts := map[string]int64{"total": 0, constants.BookStatusCurrentlyRead: 0, constants.BookStatusFinished: 0, constants.BookStatusNextToRead: 0, constants.BookStatusInLibrary: 0}
-	for _, status := range []string{constants.BookStatusInLibrary, constants.BookStatusCurrentlyRead, constants.BookStatusFinished, constants.BookStatusNextToRead} {
-		var c int64
-		if err := r.db.WithContext(ctx).Model(&book.Book{}).Where("user_id = ? AND status = ?", userID, status).Count(&c).Error; err != nil {
-			return nil, err
-		}
-		counts[status] = c
+
+	type groupedCount struct {
+		Status string
+		Total  int64
 	}
-	var total int64
-	if err := r.db.WithContext(ctx).Model(&book.Book{}).Where("user_id = ?", userID).Count(&total).Error; err != nil {
+	var grouped []groupedCount
+	if err := r.db.WithContext(ctx).Model(&book.Book{}).
+		Select("status, COUNT(*) as total").
+		Where("user_id = ?", userID).
+		Group("status").
+		Scan(&grouped).Error; err != nil {
 		return nil, err
 	}
-	counts["total"] = total
+
+	for _, row := range grouped {
+		counts[row.Status] = row.Total
+		counts["total"] += row.Total
+	}
 	return counts, nil
 }
 func (r *bookRepo) Recent(ctx context.Context, userID uuid.UUID, limit int) ([]book.Book, error) {

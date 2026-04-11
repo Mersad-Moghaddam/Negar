@@ -11,6 +11,20 @@ export default defineConfig({
       }
     }
   },
+  build: {
+    sourcemap: false,
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor_react: ['react', 'react-dom', 'react-router-dom'],
+          vendor_query: ['@tanstack/react-query'],
+          vendor_forms: ['react-hook-form', '@hookform/resolvers', 'zod']
+        }
+      }
+    }
+  },
   test: {
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
