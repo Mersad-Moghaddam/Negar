@@ -148,7 +148,6 @@ export const messages = {
       reminderOn: 'Reminder is on at {time}.',
       reminderOff: 'Reminder is currently off.',
       logSession: 'Log quick session',
-      noInsights: 'Insights will appear as you read and update progress.',
       sessionsCount: '{count} recent sessions',
       emptyAnalyticsTitle: 'No analytics yet',
       emptyAnalyticsDescription: 'Add books and track progress to unlock reading analytics.',
@@ -170,7 +169,71 @@ export const messages = {
       goLibrary: 'Go to library',
       needsAttention: 'Needs attention',
       tidyTitle: 'Everything is tidy',
-      tidyDescription: 'No pending books right now—great reading flow.'
+      tidyDescription: 'No pending books right now—great reading flow.',
+      insights: {
+        priorityLabel: 'Primary insight',
+        recommendationLabel: 'Best next step',
+        variants: {
+          positive: 'Strong signal',
+          neutral: 'Insight',
+          warning: 'Needs attention',
+          inactive: 'Inactive'
+        },
+        states: {
+          error: {
+            title: 'Could not load reading insights',
+            description: 'Your dashboard is fine, but insights could not be prepared right now.',
+            retry: 'Try again'
+          }
+        },
+        empty: {
+          title: 'Your reading coach is ready',
+          message: 'Add one short reading session or update progress to unlock personalized insights.'
+        },
+        titles: {
+          inactive: 'Your momentum has cooled down',
+          nearCompletion: 'You are very close to finishing a book',
+          resumed: 'Great job getting back into reading',
+          consistency: 'Your reading routine is becoming consistent',
+          momentum: 'You are building stronger momentum',
+          goalAhead: 'You are ahead of your weekly goal',
+          goalBehind: 'You are active, but behind your weekly goal',
+          focus: 'A little focus could improve progress',
+          steady: 'Your reading pace is steady'
+        },
+        messages: {
+          inactive: 'No progress was logged in recent days. A small session today can quickly restore momentum.',
+          nearCompletion: 'Finishing your closest book now will create a strong completion boost.',
+          resumed: 'You returned this week after a quiet stretch. Keep the comeback going.',
+          consistency: 'You logged reading on multiple days this week, which is a strong consistency signal.',
+          momentum: 'Your page count is higher than last week, showing positive momentum.',
+          goalAhead: 'You have already reached your weekly page target. Excellent rhythm.',
+          goalBehind: 'You still have time to recover this week with one or two focused sessions.',
+          focus: 'You are splitting attention across several active books with limited recent progress.',
+          steady: 'You are progressing. One focused update will make your next insight more specific.'
+        },
+        recommendations: {
+          logFirstSession: 'Log your first reading session this week.',
+          rebuildMomentum: 'Add one 15–20 minute session today to restart your rhythm.',
+          finishClosestBook: 'Prioritize the book nearest to completion and finish it.',
+          keepRhythm: 'Protect your current rhythm with one more session this week.',
+          maintainGoal: 'Keep your pace and stretch toward your next weekly milestone.',
+          smallSessionToday: 'Schedule one short session today to get back on target.',
+          focusOneBook: 'Choose one active title as your focus book for this week.',
+          logProgressOnCurrent: 'Log progress on your current book to sharpen your insights.'
+        },
+        signals: {
+          activeBooks: 'Active books',
+          loggedSessions: 'Logged sessions',
+          daysSinceLastActivity: 'Days since last activity',
+          sessionsThisWeek: 'Sessions this week',
+          activeDaysThisWeek: 'Active days this week',
+          pagesThisWeek: 'Pages this week',
+          pagesLastWeek: 'Pages last week',
+          closestBookProgress: 'Closest book progress',
+          goalProgress: 'Weekly goal progress'
+        }
+      }
     },
     library: {
       title: 'Library',
@@ -425,7 +488,6 @@ export const messages = {
       reminderOn: 'یادآور در ساعت {time} فعال است.',
       reminderOff: 'یادآور غیرفعال است.',
       logSession: 'ثبت جلسه کوتاه',
-      noInsights: 'با ثبت پیشرفت، بینش‌های شخصی اینجا نمایش داده می‌شود.',
       sessionsCount: '{count} جلسه اخیر',
       emptyAnalyticsTitle: 'هنوز تحلیلی ندارید',
       emptyAnalyticsDescription: 'با افزودن کتاب و ثبت پیشرفت، تحلیل‌ها فعال می‌شوند.',
@@ -447,7 +509,71 @@ export const messages = {
       goLibrary: 'رفتن به کتابخانه',
       needsAttention: 'نیازمند توجه',
       tidyTitle: 'همه چیز مرتب است',
-      tidyDescription: 'فعلاً موردی در انتظار نیست.'
+      tidyDescription: 'فعلاً موردی در انتظار نیست.',
+      insights: {
+        priorityLabel: 'بینش اصلی',
+        recommendationLabel: 'بهترین اقدام بعدی',
+        variants: {
+          positive: 'سیگنال مثبت',
+          neutral: 'بینش',
+          warning: 'نیازمند توجه',
+          inactive: 'کم‌تحرک'
+        },
+        states: {
+          error: {
+            title: 'بارگذاری بینش‌های مطالعه انجام نشد',
+            description: 'داشبورد پایدار است، اما فعلاً تولید بینش ممکن نشد.',
+            retry: 'تلاش دوباره'
+          }
+        },
+        empty: {
+          title: 'مربی مطالعه‌ات آماده است',
+          message: 'یک جلسه کوتاه ثبت کن یا پیشرفت کتابت را به‌روزرسانی کن تا بینش شخصی فعال شود.'
+        },
+        titles: {
+          inactive: 'شتاب مطالعه‌ات کمی افت کرده',
+          nearCompletion: 'خیلی نزدیکِ تمام‌کردن یکی از کتاب‌ها هستی',
+          resumed: 'عالیه که دوباره به مطالعه برگشتی',
+          consistency: 'برنامه مطالعه‌ات دارد منظم می‌شود',
+          momentum: 'شتاب مطالعه‌ات رو به رشد است',
+          goalAhead: 'از هدف هفتگی جلوتر هستی',
+          goalBehind: 'فعال هستی، اما از هدف هفتگی عقب مانده‌ای',
+          focus: 'کمی تمرکز، نتیجه را بهتر می‌کند',
+          steady: 'ریتم مطالعه‌ات پایدار است'
+        },
+        messages: {
+          inactive: 'در چند روز اخیر پیشرفتی ثبت نشده است. یک جلسه کوتاه امروز می‌تواند ریتمت را برگرداند.',
+          nearCompletion: 'اگر همین حالا کتاب نزدیک به پایان را تمام کنی، شتاب خوبی می‌گیری.',
+          resumed: 'این هفته بعد از یک وقفه برگشتی. همین روند بازگشت را حفظ کن.',
+          consistency: 'این هفته در چند روز مختلف مطالعه ثبت کرده‌ای؛ نشانه خوبی از ثبات است.',
+          momentum: 'تعداد صفحات این هفته از هفته قبل بیشتر شده و این یعنی شتاب مثبت.',
+          goalAhead: 'هدف هفتگی صفحاتت را رد کرده‌ای. ریتمت عالی است.',
+          goalBehind: 'هنوز فرصت جبران داری؛ یک یا دو جلسه متمرکز می‌تواند تو را به هدف نزدیک کند.',
+          focus: 'کتاب‌های فعالت زیاد شده‌اند و پیشرفت اخیر بین آن‌ها پخش شده است.',
+          steady: 'در مسیر هستی. با یک ثبت پیشرفت متمرکز، بینش بعدی دقیق‌تر می‌شود.'
+        },
+        recommendations: {
+          logFirstSession: 'اولین جلسه مطالعه این هفته را ثبت کن.',
+          rebuildMomentum: 'امروز یک جلسه ۱۵ تا ۲۰ دقیقه‌ای اضافه کن تا ریتمت برگردد.',
+          finishClosestBook: 'کتابی را که نزدیک پایان است در اولویت بگذار و تمامش کن.',
+          keepRhythm: 'برای حفظ این ریتم، یک جلسه دیگر همین هفته ثبت کن.',
+          maintainGoal: 'همین سرعت را نگه دار و به هدف بعدی هفتگی فکر کن.',
+          smallSessionToday: 'امروز یک جلسه کوتاه برنامه‌ریزی کن تا دوباره روی هدف قرار بگیری.',
+          focusOneBook: 'این هفته یک کتاب فعال را به‌عنوان تمرکز اصلی انتخاب کن.',
+          logProgressOnCurrent: 'پیشرفت کتاب فعلی را ثبت کن تا بینش‌ها دقیق‌تر شوند.'
+        },
+        signals: {
+          activeBooks: 'کتاب‌های فعال',
+          loggedSessions: 'جلسه‌های ثبت‌شده',
+          daysSinceLastActivity: 'روز از آخرین فعالیت',
+          sessionsThisWeek: 'جلسه این هفته',
+          activeDaysThisWeek: 'روزهای فعال این هفته',
+          pagesThisWeek: 'صفحه این هفته',
+          pagesLastWeek: 'صفحه هفته قبل',
+          closestBookProgress: 'پیشرفت نزدیک‌ترین کتاب',
+          goalProgress: 'پیشرفت هدف هفتگی'
+        }
+      }
     },
     library: {
       title: 'کتابخانه',

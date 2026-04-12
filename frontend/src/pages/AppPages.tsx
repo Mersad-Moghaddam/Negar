@@ -39,10 +39,11 @@ import {
   useUpdateBookProgressMutation,
   useUpdateBookStatusMutation
 } from '../features/books/queries/use-books'
+import { ReadingInsightsCard } from '../features/dashboard/components/reading-insights-card'
+import { buildReadingInsight } from '../features/dashboard/insights/insight-engine'
 import {
   useCreateSessionMutation,
   useDashboardAnalytics,
-  useDashboardInsights,
   useDashboardReminder,
   useGoalProgress,
   useSaveGoalMutation,
@@ -129,19 +130,28 @@ export function Dashboard() {
   const { t, locale } = useI18n()
   const booksQuery = useBooksQuery()
   const analyticsQuery = useDashboardAnalytics()
-  const insightsQuery = useDashboardInsights()
   const reminderQuery = useDashboardReminder()
   const goalsQuery = useGoalProgress()
   const sessionsQuery = useSessions()
   const saveGoal = useSaveGoalMutation()
   const createSession = useCreateSessionMutation()
+  const updateProgress = useUpdateBookProgressMutation()
 
   const books = useMemo(() => booksQuery.data ?? [], [booksQuery.data])
   const analytics = analyticsQuery.data
-  const insights = insightsQuery.data ?? []
   const reminder = reminderQuery.data
-  const goals = goalsQuery.data ?? []
-  const sessions = sessionsQuery.data ?? []
+  const goals = useMemo(() => goalsQuery.data ?? [], [goalsQuery.data])
+  const sessions = useMemo(() => sessionsQuery.data ?? [], [sessionsQuery.data])
+  const readingInsight = useMemo(
+    () =>
+      buildReadingInsight({
+        books,
+        analytics,
+        goals,
+        sessions
+      }),
+    [analytics, books, goals, sessions]
+  )
 
   const counts = useMemo(() => {
     const base: Record<BookStatus, number> = { inLibrary: 0, currentlyReading: 0, finished: 0, nextToRead: 0 }
@@ -183,7 +193,24 @@ export function Dashboard() {
                 <p className="text-xs text-mutedForeground">
                   {numberFormatter.format(activeBook.currentPage)} / {numberFormatter.format(activeBook.totalPages)}
                 </p>
-                <Button size="sm" onClick={() => createSession.mutate({ bookId: activeBook.id, date: new Date().toISOString().slice(0, 10), duration: 25, pages: 12 })}>
+                <Button
+                  size="sm"
+                  disabled={createSession.isPending || updateProgress.isPending}
+                  onClick={async () => {
+                    const quickSessionPages = 12
+                    await createSession.mutateAsync({
+                      bookId: activeBook.id,
+                      date: new Date().toISOString().slice(0, 10),
+                      duration: 25,
+                      pages: quickSessionPages
+                    })
+
+                    const nextPage = Math.min(activeBook.totalPages, activeBook.currentPage + quickSessionPages)
+                    if (nextPage > activeBook.currentPage) {
+                      await updateProgress.mutateAsync({ id: activeBook.id, currentPage: nextPage })
+                    }
+                  }}
+                >
                   {t('dashboard.logSession')}
                 </Button>
               </div>
@@ -195,12 +222,17 @@ export function Dashboard() {
 
         <SectionCard>
           <SectionHeader title={t('dashboard.intelligenceTitle')} description={t('dashboard.intelligenceDesc')} />
-          <div className="space-y-2">
-            {insights.map((item, idx) => (
-              <div key={idx} className="rounded-xl border border-border bg-surface px-4 py-3 text-sm">{item.message}</div>
-            ))}
-            {!insights.length && <p className="text-sm text-mutedForeground">{t('dashboard.noInsights')}</p>}
-          </div>
+          <ReadingInsightsCard
+            insight={readingInsight}
+            isLoading={booksQuery.isLoading || analyticsQuery.isLoading || goalsQuery.isLoading || sessionsQuery.isLoading}
+            isError={booksQuery.isError || analyticsQuery.isError || goalsQuery.isError || sessionsQuery.isError}
+            onRetry={() => {
+              void booksQuery.refetch()
+              void analyticsQuery.refetch()
+              void goalsQuery.refetch()
+              void sessionsQuery.refetch()
+            }}
+          />
           {reminder ? <p className="text-small text-mutedForeground">{reminder.enabled ? t('dashboard.reminderOn', { time: reminder.time }) : t('dashboard.reminderOff')}</p> : null}
           <p className="text-small text-mutedForeground">{t('dashboard.sessionsCount', { count: sessions.length })}</p>
         </SectionCard>

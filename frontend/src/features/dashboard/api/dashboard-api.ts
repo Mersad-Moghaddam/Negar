@@ -1,15 +1,10 @@
 import api from '../../../api/client'
 import { extractData } from '../../../api/http'
-import { GoalProgress, ReadingAnalytics, ReadingInsight, ReadingSession, ReminderSettings } from '../../../types'
+import { GoalProgress, ReadingAnalytics, ReadingSession, ReminderSettings } from '../../../types'
 
 export async function fetchAnalytics() {
   const response = await api.get<ReadingAnalytics>('/dashboard/analytics')
   return extractData(response)
-}
-
-export async function fetchInsights() {
-  const response = await api.get<{ items: ReadingInsight[] }>('/dashboard/insights')
-  return extractData(response).items
 }
 
 export async function fetchReminder() {
