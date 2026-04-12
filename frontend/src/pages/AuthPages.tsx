@@ -188,9 +188,9 @@ export function Register() {
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      await registerMutation.mutateAsync(values)
+      const result = await registerMutation.mutateAsync(values)
       toast.success(t('auth.signUp'))
-      nav('/dashboard')
+      nav(result.autoLoggedIn ? '/dashboard' : '/login')
     } catch (error) {
       const apiError = parseApiError(error)
       if (apiError.code === 'email_already_exists') return toast.error(t('auth.emailAlreadyExists'))

@@ -84,8 +84,7 @@ describe('Register page', () => {
 
   it('redirects to dashboard after successful registration', async () => {
     registerMutateAsyncMock.mockResolvedValue({
-      user: { id: 'u-1', name: 'Ada', email: 'ada@example.com' },
-      tokens: { accessToken: 'acc', refreshToken: 'ref' }
+      autoLoggedIn: true
     })
 
     const user = userEvent.setup()
@@ -111,6 +110,31 @@ describe('Register page', () => {
         confirmPassword: 'strong-pass'
       })
       expect(navigateMock).toHaveBeenCalledWith('/dashboard')
+    })
+  })
+
+  it('redirects to login when registration succeeds but auto-login fails', async () => {
+    registerMutateAsyncMock.mockResolvedValue({
+      autoLoggedIn: false
+    })
+
+    const user = userEvent.setup()
+    render(
+      <ToastProvider>
+        <MemoryRouter>
+          <Register />
+        </MemoryRouter>
+      </ToastProvider>
+    )
+
+    await user.type(screen.getByPlaceholderText('auth.name'), 'Ada')
+    await user.type(screen.getByPlaceholderText('auth.email'), 'ada@example.com')
+    await user.type(screen.getAllByPlaceholderText('auth.password')[0], 'strong-pass')
+    await user.type(screen.getByPlaceholderText('auth.confirmPassword'), 'strong-pass')
+    await user.click(screen.getByRole('button', { name: 'auth.signUp' }))
+
+    await waitFor(() => {
+      expect(navigateMock).toHaveBeenCalledWith('/login')
     })
   })
 })
