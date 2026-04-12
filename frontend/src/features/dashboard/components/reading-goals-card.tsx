@@ -102,7 +102,7 @@ export function ReadingGoalsCard({
               <div>
                 <p className="font-medium text-foreground">{s.period === 'weekly' ? t('dashboard.periodWeekly') : t('dashboard.periodMonthly')}</p>
                 <p>{t('dashboard.goalSummary', { pagesRead: 0, pagesGoal: s.targetPages ?? 0, booksRead: 0, booksGoal: s.targetBooks ?? 0 })}</p>
-                <p>{s.reasonKey ? t(`dashboard.goalSuggestionReasons.${s.reasonKey}`) : s.reason}</p>
+                <p>{s.reasonKey ? t(`dashboard.goalSuggestionReasons.${s.reasonKey}`) : t('dashboard.goalSuggestionReasons.fallback')}</p>
               </div>
               <Button size="sm" variant="secondary" onClick={() => applySuggestion(s.period)}>{t('dashboard.applySuggestion')}</Button>
             </div>

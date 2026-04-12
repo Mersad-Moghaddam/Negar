@@ -185,7 +185,8 @@ export const messages = {
       goalSuggestionReasons: {
         restart_pace: 'Based on your recent restart pace, we kept this realistic.',
         consistency_stretch: 'Based on your recent consistency, this is a gentle stretch target.',
-        recent_pace: 'Based on your recent reading pace over the last few weeks.'
+        recent_pace: 'Based on your recent reading pace over the last few weeks.',
+        fallback: 'Based on your recent activity.'
       },
       noActiveTitle: 'No active books yet',
       noActiveDescription: 'Move a title to Currently Reading to start seeing your progress here.',
@@ -193,6 +194,14 @@ export const messages = {
       needsAttention: 'Needs attention',
       tidyTitle: 'Everything is tidy',
       tidyDescription: 'No pending books right now—great reading flow.',
+      apiInsights: {
+        consistency: 'You are reading consistently for multiple weeks.',
+        backlog: 'You have a healthy backlog waiting; pick one title to start this week.',
+        focus: 'You are juggling several active books. Finishing one may improve momentum.',
+        shortBooks: 'You tend to finish shorter books faster. Queue one short book for quick wins.',
+        trackProgress: 'Track progress updates this week to unlock personalized insights.',
+        goalHit: 'You hit your goal. Great consistency.'
+      },
       insights: {
         priorityLabel: 'Primary insight',
         recommendationLabel: 'Best next step',
@@ -548,7 +557,8 @@ export const messages = {
       goalSuggestionReasons: {
         restart_pace: 'با توجه به بازگشت اخیرت به مطالعه، این پیشنهاد را واقع‌بینانه تنظیم کردیم.',
         consistency_stretch: 'با توجه به ثبات اخیرت، این هدف کمی چالشی اما قابل‌دستیابی است.',
-        recent_pace: 'این پیشنهاد بر اساس ریتم مطالعه چند هفته اخیرت ارائه شده است.'
+        recent_pace: 'این پیشنهاد بر اساس ریتم مطالعه چند هفته اخیرت ارائه شده است.',
+        fallback: 'این پیشنهاد بر اساس فعالیت اخیرت ارائه شده است.'
       },
       noActiveTitle: 'کتاب فعالی ندارید',
       noActiveDescription: 'یک کتاب را به در حال مطالعه منتقل کنید.',
@@ -556,6 +566,14 @@ export const messages = {
       needsAttention: 'نیازمند توجه',
       tidyTitle: 'همه چیز مرتب است',
       tidyDescription: 'فعلاً موردی در انتظار نیست.',
+      apiInsights: {
+        consistency: 'چند هفته است که با ثبات مطالعه می‌کنی.',
+        backlog: 'چند کتاب خوب در صف داری؛ این هفته یکی را شروع کن.',
+        focus: 'چند کتاب را هم‌زمان جلو می‌بری؛ تمام‌کردن یکی می‌تواند شتابت را بهتر کند.',
+        shortBooks: 'معمولاً کتاب‌های کوتاه را سریع‌تر تمام می‌کنی؛ یک کتاب کوتاه برای برد سریع انتخاب کن.',
+        trackProgress: 'این هفته چند به‌روزرسانی پیشرفت ثبت کن تا بینش‌های شخصی‌تر فعال شوند.',
+        goalHit: 'به هدفت رسیدی. ثباتت عالیه.'
+      },
       insights: {
         priorityLabel: 'بینش اصلی',
         recommendationLabel: 'بهترین اقدام بعدی',

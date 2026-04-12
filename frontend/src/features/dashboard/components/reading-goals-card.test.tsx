@@ -50,6 +50,25 @@ describe('ReadingGoalsCard', () => {
     expect(screen.queryByText('Based on your recent restart pace, we kept this realistic.')).not.toBeInTheDocument()
   })
 
+
+
+  it('uses localized fallback reason when reasonKey is missing', () => {
+    localStorage.setItem('libro.locale', 'fa')
+    const noKeyGoals = {
+      ...goals,
+      suggestions: [{ ...goals.suggestions[0], reasonKey: undefined }]
+    }
+
+    render(
+      <I18nProvider>
+        <ReadingGoalsCard goals={noKeyGoals} isSaving={false} onSave={async () => {}} />
+      </I18nProvider>
+    )
+
+    expect(screen.getByText('این پیشنهاد بر اساس فعالیت اخیرت ارائه شده است.')).toBeInTheDocument()
+    expect(screen.queryByText('Based on your recent pace.')).not.toBeInTheDocument()
+  })
+
   it('applies suggestion into editable form', async () => {
     localStorage.setItem('libro.locale', 'en')
     const onSave = vi.fn(async () => {})
