@@ -135,6 +135,7 @@ export function Dashboard() {
   const sessionsQuery = useSessions()
   const saveGoal = useSaveGoalMutation()
   const createSession = useCreateSessionMutation()
+  const updateProgress = useUpdateBookProgressMutation()
 
   const books = useMemo(() => booksQuery.data ?? [], [booksQuery.data])
   const analytics = analyticsQuery.data
@@ -192,7 +193,24 @@ export function Dashboard() {
                 <p className="text-xs text-mutedForeground">
                   {numberFormatter.format(activeBook.currentPage)} / {numberFormatter.format(activeBook.totalPages)}
                 </p>
-                <Button size="sm" onClick={() => createSession.mutate({ bookId: activeBook.id, date: new Date().toISOString().slice(0, 10), duration: 25, pages: 12 })}>
+                <Button
+                  size="sm"
+                  disabled={createSession.isPending || updateProgress.isPending}
+                  onClick={async () => {
+                    const quickSessionPages = 12
+                    await createSession.mutateAsync({
+                      bookId: activeBook.id,
+                      date: new Date().toISOString().slice(0, 10),
+                      duration: 25,
+                      pages: quickSessionPages
+                    })
+
+                    const nextPage = Math.min(activeBook.totalPages, activeBook.currentPage + quickSessionPages)
+                    if (nextPage > activeBook.currentPage) {
+                      await updateProgress.mutateAsync({ id: activeBook.id, currentPage: nextPage })
+                    }
+                  }}
+                >
                   {t('dashboard.logSession')}
                 </Button>
               </div>
