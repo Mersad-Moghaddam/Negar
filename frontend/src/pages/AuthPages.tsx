@@ -1,7 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowRight, BookOpenText, Quote, Sparkles } from 'lucide-react'
 import { useForm } from 'react-hook-form'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 
 import { parseApiError } from '../api/http'
 import { ThemeToggle } from '../components/ThemeToggle'
@@ -9,6 +10,8 @@ import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
+import { Skeleton } from '../components/ui/skeleton'
+import { authStore } from '../contexts/authStore'
 import {
   LoginFormValues,
   RegisterFormValues,
@@ -149,6 +152,29 @@ function AuthFrame({ title, subtitle, children }: { title: string; subtitle: str
   )
 }
 
+function AuthRouteGuard({ children }: { children: React.ReactNode }) {
+  const user = authStore((state) => state.user)
+  const hydrated = authStore((state) => state.hydrated)
+  const hydrate = authStore((state) => state.hydrate)
+
+  useEffect(() => {
+    if (!hydrated) hydrate()
+  }, [hydrate, hydrated])
+
+  if (!hydrated) {
+    return (
+      <div className={wrap}>
+        <div className="mx-auto w-full max-w-md">
+          <Skeleton className="h-[420px]" />
+        </div>
+      </div>
+    )
+  }
+
+  if (user) return <Navigate to="/dashboard" replace />
+  return <>{children}</>
+}
+
 export function Register() {
   const nav = useNavigate()
   const { t } = useI18n()
@@ -164,7 +190,7 @@ export function Register() {
     try {
       await registerMutation.mutateAsync(values)
       toast.success(t('auth.signUp'))
-      nav('/login')
+      nav('/dashboard')
     } catch (error) {
       const apiError = parseApiError(error)
       if (apiError.code === 'email_already_exists') return toast.error(t('auth.emailAlreadyExists'))
@@ -175,42 +201,44 @@ export function Register() {
   })
 
   return (
-    <div className={wrap}>
-      <AuthHeader />
-      <AuthFrame title={t('auth.createAccount')} subtitle={t('auth.registerSubtitle')}>
-        <form onSubmit={onSubmit} className="space-y-3">
-          <div>
-            <Input placeholder={t('auth.name')} {...form.register('name')} />
-            <FieldError message={form.formState.errors.name?.message} />
-          </div>
-          <div>
-            <Input type="email" placeholder={t('auth.email')} {...form.register('email')} />
-            <FieldError message={form.formState.errors.email?.message} />
-          </div>
-          <div>
-            <Input type="password" placeholder={t('auth.password')} {...form.register('password')} />
-            <FieldError message={form.formState.errors.password?.message} />
-          </div>
-          <div>
-            <Input
-              type="password"
-              placeholder={t('auth.confirmPassword')}
-              {...form.register('confirmPassword')}
-            />
-            <FieldError message={form.formState.errors.confirmPassword?.message} />
-          </div>
-          <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
-            {registerMutation.isPending ? t('common.save') : t('auth.signUp')}
-          </Button>
-          <p className="text-small text-mutedForeground">
-            {t('auth.hasAccount')}{' '}
-            <Link to="/login" className="font-medium text-primary underline-offset-2 hover:underline">
-              {t('auth.logIn')}
-            </Link>
-          </p>
-        </form>
-      </AuthFrame>
-    </div>
+    <AuthRouteGuard>
+      <div className={wrap}>
+        <AuthHeader />
+        <AuthFrame title={t('auth.createAccount')} subtitle={t('auth.registerSubtitle')}>
+          <form onSubmit={onSubmit} className="space-y-3">
+            <div>
+              <Input placeholder={t('auth.name')} {...form.register('name')} />
+              <FieldError message={form.formState.errors.name?.message} />
+            </div>
+            <div>
+              <Input type="email" placeholder={t('auth.email')} {...form.register('email')} />
+              <FieldError message={form.formState.errors.email?.message} />
+            </div>
+            <div>
+              <Input type="password" placeholder={t('auth.password')} {...form.register('password')} />
+              <FieldError message={form.formState.errors.password?.message} />
+            </div>
+            <div>
+              <Input
+                type="password"
+                placeholder={t('auth.confirmPassword')}
+                {...form.register('confirmPassword')}
+              />
+              <FieldError message={form.formState.errors.confirmPassword?.message} />
+            </div>
+            <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
+              {registerMutation.isPending ? t('common.save') : t('auth.signUp')}
+            </Button>
+            <p className="text-small text-mutedForeground">
+              {t('auth.hasAccount')}{' '}
+              <Link to="/login" className="font-medium text-primary underline-offset-2 hover:underline">
+                {t('auth.logIn')}
+              </Link>
+            </p>
+          </form>
+        </AuthFrame>
+      </div>
+    </AuthRouteGuard>
   )
 }
 
@@ -240,29 +268,31 @@ export function Login() {
   })
 
   return (
-    <div className={wrap}>
-      <AuthHeader />
-      <AuthFrame title={t('auth.welcomeBack')} subtitle={t('auth.loginSubtitle')}>
-        <form onSubmit={onSubmit} className="space-y-3">
-          <div>
-            <Input type="email" placeholder={t('auth.email')} {...form.register('email')} />
-            <FieldError message={form.formState.errors.email?.message} />
-          </div>
-          <div>
-            <Input type="password" placeholder={t('auth.password')} {...form.register('password')} />
-            <FieldError message={form.formState.errors.password?.message} />
-          </div>
-          <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-            {loginMutation.isPending ? t('common.save') : t('auth.logIn')}
-          </Button>
-        </form>
-        <p className="text-small text-mutedForeground">
-          {t('auth.needAccount')}{' '}
-          <Link to="/register" className="font-medium text-primary underline-offset-2 hover:underline">
-            {t('auth.signUp')}
-          </Link>
-        </p>
-      </AuthFrame>
-    </div>
+    <AuthRouteGuard>
+      <div className={wrap}>
+        <AuthHeader />
+        <AuthFrame title={t('auth.welcomeBack')} subtitle={t('auth.loginSubtitle')}>
+          <form onSubmit={onSubmit} className="space-y-3">
+            <div>
+              <Input type="email" placeholder={t('auth.email')} {...form.register('email')} />
+              <FieldError message={form.formState.errors.email?.message} />
+            </div>
+            <div>
+              <Input type="password" placeholder={t('auth.password')} {...form.register('password')} />
+              <FieldError message={form.formState.errors.password?.message} />
+            </div>
+            <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
+              {loginMutation.isPending ? t('common.save') : t('auth.logIn')}
+            </Button>
+          </form>
+          <p className="text-small text-mutedForeground">
+            {t('auth.needAccount')}{' '}
+            <Link to="/register" className="font-medium text-primary underline-offset-2 hover:underline">
+              {t('auth.signUp')}
+            </Link>
+          </p>
+        </AuthFrame>
+      </div>
+    </AuthRouteGuard>
   )
 }

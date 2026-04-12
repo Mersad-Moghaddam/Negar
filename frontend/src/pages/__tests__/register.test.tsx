@@ -3,10 +3,12 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { authStore } from '../../contexts/authStore'
 import { ToastProvider } from '../../shared/toast/toast-provider'
 import { Register } from '../AuthPages'
 
-const { postMock, registerMutateAsyncMock } = vi.hoisted(() => ({
+const { navigateMock, postMock, registerMutateAsyncMock } = vi.hoisted(() => ({
+  navigateMock: vi.fn(),
   postMock: vi.fn(),
   registerMutateAsyncMock: vi.fn()
 }))
@@ -26,6 +28,13 @@ vi.mock('../../features/auth/queries/use-auth-mutations', () => ({
     isPending: false
   })
 }))
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom')
+  return {
+    ...actual,
+    useNavigate: () => navigateMock
+  }
+})
 
 vi.mock('../../shared/i18n/i18n-provider', () => ({
   useI18n: () => ({
@@ -39,8 +48,10 @@ vi.mock('../../components/ThemeToggle', () => ({
 
 describe('Register page', () => {
   beforeEach(() => {
+    navigateMock.mockReset()
     postMock.mockReset()
     registerMutateAsyncMock.mockReset()
+    authStore.setState({ user: null, accessToken: null, refreshToken: null, hydrated: true })
   })
 
   it('shows duplicate email message when backend returns conflict', async () => {
@@ -68,6 +79,38 @@ describe('Register page', () => {
 
     await waitFor(() => {
       expect(screen.getByText('auth.emailAlreadyExists')).toBeInTheDocument()
+    })
+  })
+
+  it('redirects to dashboard after successful registration', async () => {
+    registerMutateAsyncMock.mockResolvedValue({
+      user: { id: 'u-1', name: 'Ada', email: 'ada@example.com' },
+      tokens: { accessToken: 'acc', refreshToken: 'ref' }
+    })
+
+    const user = userEvent.setup()
+    render(
+      <ToastProvider>
+        <MemoryRouter>
+          <Register />
+        </MemoryRouter>
+      </ToastProvider>
+    )
+
+    await user.type(screen.getByPlaceholderText('auth.name'), 'Ada')
+    await user.type(screen.getByPlaceholderText('auth.email'), 'ada@example.com')
+    await user.type(screen.getAllByPlaceholderText('auth.password')[0], 'strong-pass')
+    await user.type(screen.getByPlaceholderText('auth.confirmPassword'), 'strong-pass')
+    await user.click(screen.getByRole('button', { name: 'auth.signUp' }))
+
+    await waitFor(() => {
+      expect(registerMutateAsyncMock).toHaveBeenCalledWith({
+        name: 'Ada',
+        email: 'ada@example.com',
+        password: 'strong-pass',
+        confirmPassword: 'strong-pass'
+      })
+      expect(navigateMock).toHaveBeenCalledWith('/dashboard')
     })
   })
 })

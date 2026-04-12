@@ -49,7 +49,7 @@ describe('Login page', () => {
     postMock.mockReset()
     loginMutateAsyncMock.mockReset()
     localStorage.clear()
-    authStore.setState({ user: null, accessToken: null, refreshToken: null, hydrated: false })
+    authStore.setState({ user: null, accessToken: null, refreshToken: null, hydrated: true })
   })
 
   it('submits credentials, stores auth, and redirects on success', async () => {

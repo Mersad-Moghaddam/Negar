@@ -114,7 +114,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     }
                   }
                   logout()
-                  nav('/login')
+                  nav('/')
                 }}
               >
                 {t('nav.signOut')}

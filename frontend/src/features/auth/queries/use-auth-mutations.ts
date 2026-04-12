@@ -15,7 +15,15 @@ export function useLoginMutation() {
 }
 
 export function useRegisterMutation() {
+  const setAuth = authStore((state) => state.setAuth)
+
   return useMutation({
-    mutationFn: register
+    mutationFn: async (payload: Parameters<typeof register>[0]) => {
+      await register(payload)
+      return login({ email: payload.email, password: payload.password })
+    },
+    onSuccess: (data) => {
+      setAuth(data.user, data.tokens.accessToken, data.tokens.refreshToken)
+    }
   })
 }
