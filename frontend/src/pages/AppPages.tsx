@@ -10,7 +10,8 @@ import {
   ListChecks,
   NotebookPen,
   Sparkles,
-  Timer
+  Timer,
+  Trash2
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -70,6 +71,7 @@ import {
 import {
   useAddWishlistItemMutation,
   useAddWishlistLinkMutation,
+  useDeleteWishlistItemMutation,
   useWishlistQuery
 } from '../features/wishlist/queries/use-wishlist'
 import { QueryState } from '../shared/components/query-state'
@@ -350,6 +352,9 @@ export function Wishlist() {
   const query = useWishlistQuery()
   const addItem = useAddWishlistItemMutation()
   const addLink = useAddWishlistLinkMutation()
+  const deleteItem = useDeleteWishlistItemMutation()
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null)
+  const toast = useToast()
   const { t } = useI18n()
 
   const itemForm = useForm<WishlistItemValues>({ resolver: zodResolver(wishlistItemSchema), defaultValues: { title: '', author: '', notes: '' } })
@@ -370,7 +375,53 @@ export function Wishlist() {
         <div className="grid gap-4 md:grid-cols-2">
           {query.data?.map((item) => (
             <SectionCard key={item.id}>
-              <div className="flex items-start justify-between gap-2"><div><h3 className="font-semibold">{item.title}</h3><p className="text-small text-mutedForeground">{item.author}</p></div><Badge className="border-warning/30 bg-warning/10 text-warning"><CircleDollarSign className="h-3.5 w-3.5" /></Badge></div>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h3 className="font-semibold">{item.title}</h3>
+                  <p className="text-small text-mutedForeground">{item.author}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className="border-warning/30 bg-warning/10 text-warning"><CircleDollarSign className="h-3.5 w-3.5" /></Badge>
+                  {confirmingDeleteId === item.id ? (
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={deleteItem.isPending}
+                        onClick={async () => {
+                          try {
+                            await deleteItem.mutateAsync(item.id)
+                            setConfirmingDeleteId(null)
+                            toast.success(t('wishlist.deleteSuccess'))
+                          } catch {
+                            toast.error(t('wishlist.deleteError'))
+                          }
+                        }}
+                      >
+                        {deleteItem.isPending ? t('wishlist.deleting') : t('common.confirm')}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={deleteItem.isPending}
+                        onClick={() => setConfirmingDeleteId(null)}
+                      >
+                        {t('common.cancel')}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setConfirmingDeleteId(item.id)}
+                      aria-label={t('wishlist.removeAction')}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+              {confirmingDeleteId === item.id ? <p className="text-xs text-mutedForeground">{t('wishlist.deleteConfirm')}</p> : null}
               <Separator />
               <WishlistLinkForm itemId={item.id} onSubmit={async (values) => addLink.mutateAsync({ itemId: item.id, ...values })} isPending={addLink.isPending} />
               {item.purchaseLinks.length ? <div className="space-y-2">{item.purchaseLinks.map((link) => <a key={link.id} href={link.url} target="_blank" rel="noreferrer" className="flex items-center justify-between rounded-lg border border-border bg-surface px-3 py-2 text-xs text-mutedForeground hover:bg-secondary"><span>{link.label || link.alias}</span><ExternalLink className="h-3.5 w-3.5" /></a>)}</div> : null}

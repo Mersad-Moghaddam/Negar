@@ -21,3 +21,7 @@ export async function addWishlistItem(payload: {
 export async function addWishlistLink(itemId: string, payload: { label?: string | null; url: string }) {
   await api.post(`/wishlist/${itemId}/links`, payload)
 }
+
+export async function deleteWishlistItem(itemId: string) {
+  await api.delete(`/wishlist/${itemId}`)
+}
