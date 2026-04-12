@@ -5,13 +5,14 @@ import (
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
 )
 
 func TestAuthMiddlewareRejectsMissingToken(t *testing.T) {
 	t.Parallel()
 
 	app := fiber.New()
-	app.Get("/protected", AuthMiddleware("test-secret"), func(c *fiber.Ctx) error {
+	app.Get("/protected", AuthMiddleware("test-secret", zap.NewNop()), func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
 

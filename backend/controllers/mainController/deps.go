@@ -23,8 +23,7 @@ type ControllerDeps struct {
 	Wishlist *wishlistController.ServiceBridge
 }
 
-func DepsFromInitialRepositories(ir *repositories.InitialRepositories) ControllerDeps {
-	cfg, _ := configs.Load()
+func DepsFromInitialRepositories(ir *repositories.InitialRepositories, cfg *configs.Config) ControllerDeps {
 	authSvc := authService.New(ir.User, ir.Auth, cfg.JWTSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL, cfg.RateLimitWindow, cfg.RateLimitMaxAttempts)
 	userSvc := authService.NewUserService(ir.User)
 	bookSvc := bookService.New(ir.Book)

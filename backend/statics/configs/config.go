@@ -9,6 +9,8 @@ import (
 
 type Config struct {
 	AppPort              string
+	AppEnv               string
+	LogLevel             string
 	JWTSecret            string
 	AccessTokenTTL       time.Duration
 	RefreshTokenTTL      time.Duration
@@ -90,7 +92,25 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
-	return &Config{AppPort: appPort, JWTSecret: jwtSecret, AccessTokenTTL: accessTTL, RefreshTokenTTL: refreshTTL, MySQLHost: mysqlHost, MySQLPort: mysqlPort, MySQLUser: mysqlUser, MySQLPassword: mysqlPassword, MySQLDatabase: mysqlDatabase, RedisAddr: redisAddr, RedisPassword: os.Getenv("REDIS_PASSWORD"), RedisDB: redisDB, RateLimitWindow: rateWindow, RateLimitMaxAttempts: rateMax, FrontendURL: frontendURL}, nil
+	return &Config{
+		AppPort:              appPort,
+		AppEnv:               envOrDefault("APP_ENV", "development"),
+		LogLevel:             envOrDefault("LOG_LEVEL", ""),
+		JWTSecret:            jwtSecret,
+		AccessTokenTTL:       accessTTL,
+		RefreshTokenTTL:      refreshTTL,
+		MySQLHost:            mysqlHost,
+		MySQLPort:            mysqlPort,
+		MySQLUser:            mysqlUser,
+		MySQLPassword:        mysqlPassword,
+		MySQLDatabase:        mysqlDatabase,
+		RedisAddr:            redisAddr,
+		RedisPassword:        os.Getenv("REDIS_PASSWORD"),
+		RedisDB:              redisDB,
+		RateLimitWindow:      rateWindow,
+		RateLimitMaxAttempts: rateMax,
+		FrontendURL:          frontendURL,
+	}, nil
 }
 
 func (c *Config) MySQLDSN() string {
@@ -126,4 +146,11 @@ func parseInt(key string) (int, error) {
 		return 0, fmt.Errorf("invalid %s: %w", key, err)
 	}
 	return iv, nil
+}
+
+func envOrDefault(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
 }

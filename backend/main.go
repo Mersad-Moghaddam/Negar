@@ -9,10 +9,11 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"libro-backend/controllers/mainController"
-	"libro-backend/middleware/requestctx"
+	"libro-backend/pkg/logger"
 	"libro-backend/repositories"
 	"libro-backend/repositories/initRepositories"
 	"libro-backend/services/core"
@@ -22,36 +23,45 @@ import (
 func main() {
 	_ = godotenv.Load("dev.env")
 
-	logger := requestctx.NewLogger()
-
 	cfg, err := configs.Load()
 	if err != nil {
-		logger.Error("config_load_failed", "error", err.Error())
+		_, _ = os.Stderr.WriteString("config_load_failed: " + err.Error() + "\n")
 		os.Exit(1)
 	}
+
+	appLogger, err := logger.New("libro-backend", cfg.AppEnv, cfg.LogLevel)
+	if err != nil {
+		_, _ = os.Stderr.WriteString("logger_init_failed: " + err.Error() + "\n")
+		os.Exit(1)
+	}
+	defer func() { _ = appLogger.Sync() }()
+
+	appLogger.Info("startup", zap.String("phase", "config_loaded"))
 
 	db, err := gorm.Open(mysql.Open(cfg.MySQLDSN()), &gorm.Config{})
 	if err != nil {
-		logger.Error("mysql_connect_failed", "error", err.Error())
-		os.Exit(1)
+		appLogger.Fatal("mysql_connect_failed", zap.String("dependency", "mysql"), zap.Error(err))
 	}
+	appLogger.Info("startup", zap.String("phase", "mysql_connected"))
+
 	if err = repositories.AssertSchema(db); err != nil {
-		logger.Error("schema_check_failed", "error", err.Error())
-		os.Exit(1)
+		appLogger.Fatal("schema_check_failed", zap.String("dependency", "mysql"), zap.Error(err))
 	}
+	appLogger.Info("startup", zap.String("phase", "schema_verified"))
 
 	rdb := redis.NewClient(&redis.Options{Addr: cfg.RedisAddr, Password: cfg.RedisPassword, DB: cfg.RedisDB})
 	if err = rdb.Ping(context.Background()).Err(); err != nil {
-		logger.Error("redis_connect_failed", "error", err.Error())
-		os.Exit(1)
+		appLogger.Fatal("redis_connect_failed", zap.String("dependency", "redis"), zap.Error(err))
 	}
+	appLogger.Info("startup", zap.String("phase", "redis_connected"))
 
 	deps := initRepositories.New(db, rdb)
 	ir := repositories.NewInitialRepositories(deps)
-	server := core.NewServer(cfg, mainController.DepsFromInitialRepositories(ir), logger)
+	server := core.NewServer(cfg, mainController.DepsFromInitialRepositories(ir, cfg), appLogger)
 
 	listenErrCh := make(chan error, 1)
 	go func() {
+		appLogger.Info("http_server_listening", zap.String("port", cfg.AppPort))
 		listenErrCh <- server.Listen(":" + cfg.AppPort)
 	}()
 
@@ -60,21 +70,35 @@ func main() {
 
 	select {
 	case sig := <-sigCh:
-		logger.Info("shutdown_signal", "signal", sig.String())
+		appLogger.Info("shutdown_signal_received", zap.String("signal", sig.String()))
 	case listenErr := <-listenErrCh:
 		if listenErr != nil {
-			logger.Error("http_server_stopped", "error", listenErr.Error())
-			os.Exit(1)
+			appLogger.Fatal("http_server_stopped", zap.Error(listenErr))
 		}
 		return
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	_ = server.ShutdownWithContext(ctx)
-	sqlDB, _ := db.DB()
-	if sqlDB != nil {
-		_ = sqlDB.Close()
+
+	if err = server.ShutdownWithContext(ctx); err != nil {
+		appLogger.Error("http_server_shutdown_failed", zap.Error(err))
+	} else {
+		appLogger.Info("http_server_shutdown_complete")
 	}
-	_ = rdb.Close()
+
+	sqlDB, dbErr := db.DB()
+	if dbErr != nil {
+		appLogger.Error("mysql_handle_failed", zap.Error(dbErr))
+	} else if sqlDB != nil {
+		if closeErr := sqlDB.Close(); closeErr != nil {
+			appLogger.Error("mysql_close_failed", zap.Error(closeErr))
+		}
+	}
+
+	if err = rdb.Close(); err != nil {
+		appLogger.Error("redis_close_failed", zap.Error(err))
+	}
+
+	appLogger.Info("shutdown_complete")
 }

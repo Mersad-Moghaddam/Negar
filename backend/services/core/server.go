@@ -2,11 +2,12 @@ package core
 
 import (
 	"fmt"
-	"log/slog"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
+	"go.uber.org/zap"
 	"libro-backend/controllers/authController"
 	"libro-backend/controllers/bookController"
 	"libro-backend/controllers/mainController"
@@ -18,7 +19,7 @@ import (
 	"libro-backend/statics/configs"
 )
 
-func NewServer(cfg *configs.Config, deps mainController.ControllerDeps, logger *slog.Logger) *fiber.App {
+func NewServer(cfg *configs.Config, deps mainController.ControllerDeps, logger *zap.Logger) *fiber.App {
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			status := fiber.StatusInternalServerError
@@ -27,22 +28,27 @@ func NewServer(cfg *configs.Config, deps mainController.ControllerDeps, logger *
 				status = fiberErr.Code
 				message = fiberErr.Message
 			}
-			logger.Error("request_failed",
-				slog.String("requestId", c.GetRespHeader("X-Request-ID")),
-				slog.String("method", c.Method()),
-				slog.String("path", c.Path()),
-				slog.Int("status", status),
-				slog.String("error", err.Error()),
+
+			requestctx.LoggerFromCtx(c, logger).Error("request_unhandled_error",
+				zap.Int("status_code", status),
+				zap.Error(err),
 			)
+
 			return c.Status(status).JSON(fiber.Map{
 				"code":    "request_failed",
 				"message": message,
-				"details": fmt.Sprintf("request_id=%s", c.GetRespHeader("X-Request-ID")),
+				"details": fmt.Sprintf("request_id=%s", c.GetRespHeader(requestctx.RequestIDHeader)),
 			})
 		},
 	})
-	app.Use(requestid.New())
+	app.Use(requestid.New(requestid.Config{Header: requestctx.RequestIDHeader}))
 	app.Use(requestctx.RequestLogger(logger))
+	app.Use(recover.New(recover.Config{
+		EnableStackTrace: true,
+		StackTraceHandler: func(c *fiber.Ctx, e interface{}) {
+			requestctx.LoggerFromCtx(c, logger).Error("panic_recovered", zap.Any("panic", e))
+		},
+	}))
 	app.Use(cors.New(cors.Config{AllowOrigins: cfg.FrontendURL, AllowHeaders: "Origin, Content-Type, Accept, Authorization, X-Request-ID"}))
 
 	mainCtrl := mainController.NewMainController(deps.Main)
@@ -62,7 +68,7 @@ func NewServer(cfg *configs.Config, deps mainController.ControllerDeps, logger *
 	authRoutes.Post("/refresh", authCtrl.Refresh)
 	authRoutes.Post("/logout", authCtrl.Logout)
 
-	protected := api.Group("", auth.AuthMiddleware(cfg.JWTSecret))
+	protected := api.Group("", auth.AuthMiddleware(cfg.JWTSecret, logger))
 	protected.Get("/auth/me", authCtrl.Me)
 	protected.Get("/dashboard/summary", mainCtrl.DashboardSummary)
 	protected.Get("/dashboard/analytics", mainCtrl.DashboardAnalytics)
