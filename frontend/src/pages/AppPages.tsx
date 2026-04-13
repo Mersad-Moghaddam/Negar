@@ -520,13 +520,13 @@ export function BookDetails({ id }: { id: string }) {
       title: query.data.title,
       author: query.data.author,
       totalPages: query.data.totalPages,
-      currentPage: query.data.currentPage,
+      currentPage: query.data.currentPage ?? 0,
       status: query.data.status,
       coverUrl: query.data.coverUrl ?? '',
       genre: query.data.genre ?? '',
       isbn: query.data.isbn ?? ''
     })
-    form.reset({ currentPage: query.data.currentPage })
+    form.reset({ currentPage: query.data.currentPage ?? 0 })
   }, [query.data, editForm, form])
 
   if (!query.data) return <Card className="p-6">{t('common.loading')}</Card>
@@ -544,6 +544,7 @@ export function BookDetails({ id }: { id: string }) {
           className="grid gap-3 md:grid-cols-2"
           onSubmit={editForm.handleSubmit(async (values) => {
             try {
+              const initialCurrentPage = book.currentPage ?? 0
               await updateBook.mutateAsync({
                 id: book.id,
                 payload: {
@@ -556,7 +557,13 @@ export function BookDetails({ id }: { id: string }) {
                   isbn: values.isbn || undefined
                 }
               })
-              await updateProgress.mutateAsync({ id: book.id, currentPage: values.currentPage })
+              if (values.currentPage !== initialCurrentPage) {
+                await updateProgress.mutateAsync({ id: book.id, currentPage: values.currentPage })
+                const statusAfterProgress: BookStatus = values.currentPage === values.totalPages ? 'finished' : 'currentlyReading'
+                if (values.status !== statusAfterProgress) {
+                  await updateStatus.mutateAsync({ id: book.id, status: values.status })
+                }
+              }
               toast.success(t('books.bookUpdated'))
             } catch {
               toast.error(t('books.updateError'))
@@ -571,7 +578,7 @@ export function BookDetails({ id }: { id: string }) {
           <div><FieldBlock label={t('library.coverUrlOptional')}><Input placeholder={t('library.coverUrlOptional')} {...editForm.register('coverUrl')} /></FieldBlock><FieldError message={editForm.formState.errors.coverUrl?.message} /></div>
           <div><FieldBlock label={t('library.genreOptional')}><Input placeholder={t('library.genreOptional')} {...editForm.register('genre')} /></FieldBlock><FieldError message={editForm.formState.errors.genre?.message} /></div>
           <div><FieldBlock label={t('library.isbnOptional')}><Input placeholder={t('library.isbnOptional')} {...editForm.register('isbn')} /></FieldBlock><FieldError message={editForm.formState.errors.isbn?.message} /></div>
-          <div className="md:col-span-2"><Button type="submit" disabled={updateBook.isPending || updateProgress.isPending}>{updateBook.isPending || updateProgress.isPending ? `${t('common.save')}...` : t('common.save')}</Button></div>
+          <div className="md:col-span-2"><Button type="submit" disabled={updateBook.isPending || updateProgress.isPending || updateStatus.isPending}>{updateBook.isPending || updateProgress.isPending || updateStatus.isPending ? `${t('common.save')}...` : t('common.save')}</Button></div>
         </form>
       </SectionCard>
 
