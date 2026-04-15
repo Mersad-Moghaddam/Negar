@@ -21,8 +21,8 @@ import { useI18n } from '../shared/i18n/i18n-provider'
 import { useToast } from '../shared/toast/toast-provider'
 import { LanguageToggle } from '../widgets/language-toggle/language-toggle'
 
-const wrap = 'app-shell min-h-screen px-3 py-6 sm:px-4 sm:py-8 md:px-8 md:py-10'
-const formCard = 'mx-auto w-full max-w-md space-y-5 p-6 md:p-7'
+const wrap = 'app-shell min-h-screen px-3 py-5 sm:px-4 sm:py-7 md:px-8 md:py-10'
+const formCard = 'mx-auto w-full max-w-md space-y-5 p-4 sm:p-6 md:p-7'
 
 const FieldError = ({ message }: { message?: string }) =>
   message ? <p className="mt-1 text-xs text-destructive">{message}</p> : null
@@ -34,7 +34,7 @@ export function Landing() {
 
   return (
     <div className={wrap}>
-      <div className="mx-auto mb-6 flex max-w-6xl items-center justify-between gap-3 sm:mb-9">
+      <div className="mx-auto mb-4 flex max-w-6xl items-center justify-between gap-3 sm:mb-8">
         <div>
           <p className="text-2xl font-semibold tracking-tight text-foreground">Libro</p>
           <p className="text-xs text-mutedForeground">{t('landing.eyebrow')}</p>
@@ -46,12 +46,12 @@ export function Landing() {
       </div>
 
       <section className="mx-auto max-w-6xl space-y-4 sm:space-y-6">
-        <Card className="grid gap-6 p-4 sm:p-7 lg:grid-cols-[1.1fr_0.9fr] lg:p-9">
+        <Card className="grid gap-5 p-4 sm:gap-6 sm:p-6 lg:grid-cols-[1.1fr_0.9fr] lg:p-9">
           <div className="space-y-5">
             <Badge className="w-fit">{t('landing.productPreview')}</Badge>
-            <h1 className="max-w-2xl text-hero text-foreground">{t('landing.title')}</h1>
-            <p className="max-w-xl text-body text-mutedForeground">{t('landing.subtitle')}</p>
-            <div className="flex flex-wrap gap-3">
+            <h1 className="max-w-2xl text-3xl font-semibold leading-tight text-foreground sm:text-hero">{t('landing.title')}</h1>
+            <p className="max-w-xl text-sm text-mutedForeground sm:text-body">{t('landing.subtitle')}</p>
+            <div className="grid gap-2 sm:flex sm:flex-wrap sm:gap-3">
               <Link to="/register">
                 <Button className="w-full gap-2 sm:w-auto">
                   {t('landing.ctaPrimary')}
@@ -63,7 +63,7 @@ export function Landing() {
               </Link>
             </div>
           </div>
-          <div className="space-y-3 rounded-2xl border border-border bg-surface p-4">
+          <div className="space-y-3 rounded-2xl border border-border bg-surface p-3.5 sm:p-4">
             <p className="text-sm font-medium">{t('landing.previewCard2Title')}</p>
             {[72, 45, 88].map((v, idx) => (
               <div key={idx} className="space-y-1">
@@ -72,7 +72,7 @@ export function Landing() {
                 </div>
               </div>
             ))}
-            <div className="rounded-xl border border-border bg-card p-3">
+            <div className="rounded-xl border border-border bg-card p-2.5 sm:p-3">
               <p className="text-sm text-mutedForeground">{t('landing.previewCard1Title')}</p>
               <p className="text-2xl font-semibold text-success">{t('landing.previewCard1Value')}</p>
             </div>
@@ -82,7 +82,7 @@ export function Landing() {
 
         <div className="grid gap-3 md:grid-cols-3">
           {valueCards.map((item) => (
-            <Card key={item.title} className="surface-hover space-y-2 p-5">
+            <Card key={item.title} className="surface-hover space-y-2 p-4 sm:p-5">
               <BookOpenText className="h-4 w-4 text-primary" />
               <p className="text-base font-semibold">{item.title}</p>
               <p className="text-sm text-mutedForeground">{item.text}</p>
@@ -92,7 +92,7 @@ export function Landing() {
 
         <div className="grid gap-3 md:grid-cols-3">
           {testimonials.map((item, idx) => (
-            <Card key={idx} className="space-y-3 p-5">
+            <Card key={idx} className="space-y-3 p-4 sm:p-5">
               <Quote className="h-4 w-4 text-mutedForeground" />
               <p className="text-sm">{item.quote}</p>
               <p className="text-xs text-mutedForeground">{item.author}</p>
@@ -119,7 +119,7 @@ export function Landing() {
 
 function AuthHeader() {
   return (
-    <div className="mx-auto mb-4 flex w-full max-w-md justify-end gap-2 sm:mb-6">
+    <div className="mx-auto mb-3 flex w-full max-w-md justify-end gap-2 sm:mb-5">
       <LanguageToggle />
       <ThemeToggle />
     </div>
@@ -164,10 +164,11 @@ export function Register() {
   })
 
   return (
-    <div className={cn(wrap, 'flex items-center justify-center')}>
-      <AuthHeader />
-      <AuthFrame title={t('auth.createAccount')} subtitle={t('auth.registerSubtitle')}>
-        <form onSubmit={onSubmit} className="space-y-3">
+    <div className={cn(wrap, 'flex items-start justify-center sm:items-center')}>
+      <div className="w-full">
+        <AuthHeader />
+        <AuthFrame title={t('auth.createAccount')} subtitle={t('auth.registerSubtitle')}>
+          <form onSubmit={onSubmit} className="space-y-3">
           <div>
             <Input placeholder={t('auth.name')} {...form.register('name')} />
             <FieldError message={form.formState.errors.name?.message} />
@@ -193,8 +194,9 @@ export function Register() {
               {t('auth.logIn')}
             </Link>
           </p>
-        </form>
-      </AuthFrame>
+          </form>
+        </AuthFrame>
+      </div>
     </div>
   )
 }
@@ -225,10 +227,11 @@ export function Login() {
   })
 
   return (
-    <div className={cn(wrap, 'flex items-center justify-center')}>
-      <AuthHeader />
-      <AuthFrame title={t('auth.welcomeBack')} subtitle={t('auth.loginSubtitle')}>
-        <form onSubmit={onSubmit} className="space-y-3">
+    <div className={cn(wrap, 'flex items-start justify-center sm:items-center')}>
+      <div className="w-full">
+        <AuthHeader />
+        <AuthFrame title={t('auth.welcomeBack')} subtitle={t('auth.loginSubtitle')}>
+          <form onSubmit={onSubmit} className="space-y-3">
           <div>
             <Input type="email" placeholder={t('auth.email')} {...form.register('email')} />
             <FieldError message={form.formState.errors.email?.message} />
@@ -240,14 +243,15 @@ export function Login() {
           <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
             {loginMutation.isPending ? t('common.save') : t('auth.logIn')}
           </Button>
-        </form>
-        <p className="text-small text-mutedForeground">
-          {t('auth.needAccount')}{' '}
-          <Link to="/register" className="font-medium text-primary underline-offset-2 hover:underline">
-            {t('auth.signUp')}
-          </Link>
-        </p>
-      </AuthFrame>
+          </form>
+          <p className="text-small text-mutedForeground">
+            {t('auth.needAccount')}{' '}
+            <Link to="/register" className="font-medium text-primary underline-offset-2 hover:underline">
+              {t('auth.signUp')}
+            </Link>
+          </p>
+        </AuthFrame>
+      </div>
     </div>
   )
 }

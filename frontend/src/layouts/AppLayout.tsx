@@ -145,8 +145,11 @@ function Controls({ onLoggedOut }: { onLoggedOut?: () => void }) {
 
 function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
   const { t } = useI18n()
+  const location = useLocation()
+  const active = links.find((item) => location.pathname.startsWith(item.to))
   return (
-    <header className="surface sticky top-3 z-30 flex items-center justify-between gap-2 px-3 py-2.5 lg:hidden">
+    <header className="fixed inset-x-0 top-0 z-40 border-b border-border/80 bg-card/95 px-3 py-2.5 shadow-sm backdrop-blur lg:hidden">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-2">
       <button
         type="button"
         className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface text-foreground"
@@ -159,9 +162,13 @@ function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <Sparkles className="h-4 w-4" />
         </span>
-        <span className="truncate text-base font-semibold tracking-tight text-foreground">Libro</span>
+        <div className="min-w-0">
+          <p className="truncate text-base font-semibold tracking-tight text-foreground">Libro</p>
+          <p className="truncate text-[11px] text-mutedForeground">{active ? t(active.labelKey) : t('nav.dashboard')}</p>
+        </div>
       </Link>
       <ThemeToggle />
+      </div>
     </header>
   )
 }
@@ -274,7 +281,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="app-shell">
-      <div className="container mx-auto grid min-h-screen max-w-7xl grid-cols-1 gap-3 px-3 py-3 sm:px-4 sm:py-4 lg:grid-cols-[268px_minmax(0,1fr)] lg:gap-5 lg:px-6 lg:py-5">
+      <div className="container mx-auto grid min-h-screen max-w-7xl grid-cols-1 gap-3 px-3 pb-3 pt-[4.6rem] sm:px-4 sm:pb-4 sm:pt-[4.6rem] lg:grid-cols-[268px_minmax(0,1fr)] lg:gap-5 lg:px-6 lg:py-5">
         <Drawer open={open} onClose={() => setOpen(false)} />
 
         <aside className="surface hidden p-3.5 lg:sticky lg:top-5 lg:flex lg:h-[calc(100vh-2.5rem)] lg:flex-col lg:overflow-hidden lg:p-4">
@@ -286,7 +293,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <main className="min-w-0 space-y-4 pb-6 page-enter lg:space-y-5 lg:pb-8">
           <MobileHeader onMenuClick={() => setOpen(true)} />
 
-          <div className="surface flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-3.5">
+          <div className="surface hidden flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-3.5 lg:flex">
             <div className="min-w-0">
               <p className="eyebrow">{t('nav.platformTitle')}</p>
               <p className="truncate text-sm font-medium text-foreground">
