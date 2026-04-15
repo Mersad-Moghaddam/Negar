@@ -8,6 +8,7 @@ import (
 	"libro-backend/models/book"
 	"libro-backend/models/bookNote"
 	"libro-backend/models/purchaseLink"
+	"libro-backend/models/readingEvent"
 	"libro-backend/models/readingGoal"
 	"libro-backend/models/readingSession"
 	"libro-backend/models/user"
@@ -84,4 +85,7 @@ type ReadingProgressRepository interface {
 	FindGoalByWindow(ctx context.Context, userID uuid.UUID, period string, startDate, endDate time.Time) (*readingGoal.ReadingGoal, error)
 	ListGoals(ctx context.Context, userID uuid.UUID) ([]readingGoal.ReadingGoal, error)
 	CountCompletedBooksBetween(ctx context.Context, userID uuid.UUID, startDate, endDate time.Time) (int64, error)
+	SumEventPagesBetween(ctx context.Context, userID uuid.UUID, startDate, endDate time.Time) (int, error)
+	SumEventCompletionsBetween(ctx context.Context, userID uuid.UUID, startDate, endDate time.Time) (int, error)
+	ListEventsBetween(ctx context.Context, userID uuid.UUID, startDate, endDate time.Time) ([]readingEvent.ReadingEvent, error)
 }

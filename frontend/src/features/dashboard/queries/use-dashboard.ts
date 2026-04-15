@@ -12,11 +12,11 @@ export function useDashboardReminder() {
 }
 
 export function useGoalProgress() {
-  return useQuery({ queryKey: [...queryKeys.dashboard.analytics, 'goals'], queryFn: fetchGoals })
+  return useQuery({ queryKey: queryKeys.dashboard.goals, queryFn: fetchGoals })
 }
 
 export function useSessions() {
-  return useQuery({ queryKey: [...queryKeys.dashboard.analytics, 'sessions'], queryFn: fetchSessions })
+  return useQuery({ queryKey: queryKeys.dashboard.sessions, queryFn: fetchSessions })
 }
 
 export function useSaveGoalMutation() {
@@ -24,7 +24,8 @@ export function useSaveGoalMutation() {
   return useMutation({
     mutationFn: updateGoal,
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: [...queryKeys.dashboard.analytics, 'goals'] })
+      void qc.invalidateQueries({ queryKey: queryKeys.dashboard.goals })
+      void qc.invalidateQueries({ queryKey: queryKeys.dashboard.analytics })
     }
   })
 }
@@ -34,7 +35,9 @@ export function useCreateSessionMutation() {
   return useMutation({
     mutationFn: createSession,
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: [...queryKeys.dashboard.analytics, 'sessions'] })
+      void qc.invalidateQueries({ queryKey: queryKeys.dashboard.sessions })
+      void qc.invalidateQueries({ queryKey: queryKeys.dashboard.goals })
+      void qc.invalidateQueries({ queryKey: queryKeys.books.all })
       void qc.invalidateQueries({ queryKey: queryKeys.dashboard.analytics })
     }
   })

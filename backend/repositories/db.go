@@ -8,6 +8,7 @@ import (
 	"libro-backend/models/book"
 	"libro-backend/models/bookNote"
 	"libro-backend/models/purchaseLink"
+	"libro-backend/models/readingEvent"
 	"libro-backend/models/readingGoal"
 	"libro-backend/models/readingSession"
 	"libro-backend/models/user"
@@ -27,6 +28,7 @@ func AssertSchema(db *gorm.DB) error {
 		{&purchaseLink.PurchaseLink{}, []string{"id", "wishlist_id", "label", "alias", "url", "created_at", "updated_at"}},
 		{&readingSession.ReadingSession{}, []string{"id", "user_id", "book_id", "date", "duration", "pages_read", "created_at", "updated_at"}},
 		{&readingGoal.ReadingGoal{}, []string{"id", "user_id", "period", "pages_goal", "books_goal", "source", "start_date", "end_date", "created_at", "updated_at"}},
+		{&readingEvent.ReadingEvent{}, []string{"id", "user_id", "book_id", "event_date", "event_type", "pages_delta", "completed_delta", "created_at"}},
 		{&bookNote.BookNote{}, []string{"id", "user_id", "book_id", "note", "highlight", "created_at", "updated_at"}},
 	}
 

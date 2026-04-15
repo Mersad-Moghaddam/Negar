@@ -32,15 +32,10 @@ export async function createBook(payload: {
   await api.post('/books', payload)
 }
 
-export async function updateBook(id: string, payload: {
-  title: string
-  author: string
-  totalPages: number
-  status: BookStatus
-  coverUrl?: string
-  genre?: string
-  isbn?: string
-}) {
+export async function updateBook(
+  id: string,
+  payload: { title: string; author: string; totalPages: number; status: BookStatus; coverUrl?: string; genre?: string; isbn?: string }
+) {
   await api.put(`/books/${id}`, payload)
 }
 

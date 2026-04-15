@@ -12,6 +12,8 @@ export const queryKeys = {
   },
   dashboard: {
     analytics: ['dashboard', 'analytics'] as const,
+    goals: ['dashboard', 'goals'] as const,
+    sessions: ['dashboard', 'sessions'] as const,
     insights: ['dashboard', 'insights'] as const,
     reminder: ['dashboard', 'reminder'] as const
   },

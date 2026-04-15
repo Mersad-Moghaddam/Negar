@@ -3,11 +3,13 @@ package repositories
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"libro-backend/models/book"
 	"libro-backend/models/bookNote"
+	"libro-backend/models/readingEvent"
 	"libro-backend/statics/constants"
 	"libro-backend/statics/customErr"
 )
@@ -59,7 +61,56 @@ func (r *bookRepo) GetByID(ctx context.Context, userID, bookID uuid.UUID) (*book
 	return &b, nil
 }
 func (r *bookRepo) Update(ctx context.Context, b *book.Book) error {
-	return r.db.WithContext(ctx).Save(b).Error
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var previous book.Book
+		if err := tx.Where("id = ? AND user_id = ?", b.ID, b.UserID).First(&previous).Error; err != nil {
+			return err
+		}
+		if err := tx.Save(b).Error; err != nil {
+			return err
+		}
+
+		oldPage := 0
+		if previous.CurrentPage != nil {
+			oldPage = *previous.CurrentPage
+		}
+		newPage := 0
+		if b.CurrentPage != nil {
+			newPage = *b.CurrentPage
+		}
+		pagesDelta := newPage - oldPage
+		completedDelta := 0
+		if previous.CompletedAt == nil && b.CompletedAt != nil {
+			completedDelta = 1
+		}
+		if previous.CompletedAt != nil && b.CompletedAt == nil {
+			completedDelta = -1
+		}
+		if pagesDelta == 0 && completedDelta == 0 {
+			return nil
+		}
+
+		eventType := "progress_update"
+		switch {
+		case completedDelta > 0:
+			eventType = "book_completed"
+		case completedDelta < 0:
+			eventType = "completion_reverted"
+		case pagesDelta < 0:
+			eventType = "progress_corrected"
+		}
+
+		eventDate := time.Now()
+		event := readingEvent.ReadingEvent{
+			UserID:         b.UserID,
+			BookID:         b.ID,
+			EventDate:      time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 0, 0, 0, 0, eventDate.Location()),
+			EventType:      eventType,
+			PagesDelta:     pagesDelta,
+			CompletedDelta: completedDelta,
+		}
+		return tx.Create(&event).Error
+	})
 }
 func (r *bookRepo) Delete(ctx context.Context, userID, bookID uuid.UUID) error {
 	res := r.db.WithContext(ctx).Where("id = ? AND user_id = ?", bookID, userID).Delete(&book.Book{})

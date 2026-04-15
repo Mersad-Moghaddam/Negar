@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"libro-backend/models/book"
+	"libro-backend/models/readingEvent"
 	"libro-backend/models/readingGoal"
 	"libro-backend/models/readingSession"
 	"libro-backend/statics/constants"
@@ -32,6 +33,7 @@ func (r *readingProgressRepo) UpdateCurrentPage(ctx context.Context, userID, boo
 	}
 	b.Status = constants.BookStatusCurrentlyRead
 	b.CurrentPage = &currentPage
+	b.CompletedAt = nil
 	if currentPage == b.TotalPages {
 		b.Status = constants.BookStatusFinished
 		now := time.Now()
@@ -41,7 +43,63 @@ func (r *readingProgressRepo) UpdateCurrentPage(ctx context.Context, userID, boo
 }
 
 func (r *readingProgressRepo) CreateSession(ctx context.Context, session *readingSession.ReadingSession) error {
-	return r.db.WithContext(ctx).Create(session).Error
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(session).Error; err != nil {
+			return err
+		}
+		if session.PagesRead <= 0 {
+			return nil
+		}
+
+		var b book.Book
+		if err := tx.Where("id = ? AND user_id = ?", session.BookID, session.UserID).First(&b).Error; err != nil {
+			return err
+		}
+
+		current := 0
+		if b.CurrentPage != nil {
+			current = *b.CurrentPage
+		}
+		next := current + session.PagesRead
+		if next > b.TotalPages {
+			next = b.TotalPages
+		}
+		pagesDelta := next - current
+		if pagesDelta == 0 {
+			return nil
+		}
+
+		completedDelta := 0
+		b.Status = constants.BookStatusCurrentlyRead
+		b.CompletedAt = nil
+		if next == b.TotalPages {
+			b.Status = constants.BookStatusFinished
+			now := time.Now()
+			b.CompletedAt = &now
+			if current < b.TotalPages {
+				completedDelta = 1
+			}
+		}
+		b.CurrentPage = &next
+		if err := tx.Save(&b).Error; err != nil {
+			return err
+		}
+
+		eventType := "progress_update"
+		if completedDelta > 0 {
+			eventType = "book_completed"
+		}
+		eventDate := session.Date
+		event := readingEvent.ReadingEvent{
+			UserID:         session.UserID,
+			BookID:         session.BookID,
+			EventDate:      time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 0, 0, 0, 0, eventDate.Location()),
+			EventType:      eventType,
+			PagesDelta:     pagesDelta,
+			CompletedDelta: completedDelta,
+		}
+		return tx.Create(&event).Error
+	})
 }
 
 func (r *readingProgressRepo) ListSessions(ctx context.Context, userID uuid.UUID, limit int) ([]readingSession.ReadingSession, error) {
@@ -92,4 +150,31 @@ func (r *readingProgressRepo) CountCompletedBooksBetween(ctx context.Context, us
 		Where("user_id = ? AND completed_at IS NOT NULL AND DATE(completed_at) >= ? AND DATE(completed_at) <= ?", userID, startDate.Format("2006-01-02"), endDate.Format("2006-01-02")).
 		Count(&count).Error
 	return count, err
+}
+
+func (r *readingProgressRepo) SumEventPagesBetween(ctx context.Context, userID uuid.UUID, startDate, endDate time.Time) (int, error) {
+	var total int
+	err := r.db.WithContext(ctx).Model(&readingEvent.ReadingEvent{}).
+		Select("COALESCE(SUM(pages_delta),0)").
+		Where("user_id = ? AND event_date >= ? AND event_date <= ?", userID, startDate.Format("2006-01-02"), endDate.Format("2006-01-02")).
+		Scan(&total).Error
+	return total, err
+}
+
+func (r *readingProgressRepo) SumEventCompletionsBetween(ctx context.Context, userID uuid.UUID, startDate, endDate time.Time) (int, error) {
+	var total int
+	err := r.db.WithContext(ctx).Model(&readingEvent.ReadingEvent{}).
+		Select("COALESCE(SUM(completed_delta),0)").
+		Where("user_id = ? AND event_date >= ? AND event_date <= ?", userID, startDate.Format("2006-01-02"), endDate.Format("2006-01-02")).
+		Scan(&total).Error
+	return total, err
+}
+
+func (r *readingProgressRepo) ListEventsBetween(ctx context.Context, userID uuid.UUID, startDate, endDate time.Time) ([]readingEvent.ReadingEvent, error) {
+	var events []readingEvent.ReadingEvent
+	err := r.db.WithContext(ctx).
+		Where("user_id = ? AND event_date >= ? AND event_date <= ?", userID, startDate.Format("2006-01-02"), endDate.Format("2006-01-02")).
+		Order("event_date desc").
+		Find(&events).Error
+	return events, err
 }

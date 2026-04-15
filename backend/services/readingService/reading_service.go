@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"libro-backend/models/book"
+	"libro-backend/models/readingEvent"
 	"libro-backend/models/readingGoal"
 	"libro-backend/models/readingSession"
 	"libro-backend/repositories"
@@ -181,18 +182,30 @@ func (s *Service) GetGoalsOverview(ctx context.Context, userID uuid.UUID) (*Goal
 	if err != nil {
 		return nil, err
 	}
+	eventStart := monthlyStart.AddDate(0, -5, 0)
+	events, err := s.repo.ListEventsBetween(ctx, userID, eventStart, now)
+	if err != nil {
+		return nil, err
+	}
 	weeklyGoal, _ := s.repo.FindGoalByWindow(ctx, userID, "weekly", weeklyStart, weeklyEnd)
 	monthlyGoal, _ := s.repo.FindGoalByWindow(ctx, userID, "monthly", monthlyStart, monthlyEnd)
 
-	weeklyView := buildPeriodView("weekly", weeklyStart, weeklyEnd, weeklyGoal, sessions)
-	monthlyView := buildPeriodView("monthly", monthlyStart, monthlyEnd, monthlyGoal, sessions)
-	suggestions := s.buildSuggestions(ctx, userID, sessions)
+	useSessionsFallback := len(events) == 0
+	weeklyView := buildPeriodView("weekly", weeklyStart, weeklyEnd, weeklyGoal, events, sessions, useSessionsFallback)
+	monthlyView := buildPeriodView("monthly", monthlyStart, monthlyEnd, monthlyGoal, events, sessions, useSessionsFallback)
+	suggestions := s.buildSuggestions(ctx, userID, sessions, events, useSessionsFallback)
 
 	return &GoalOverview{Weekly: weeklyView, Monthly: monthlyView, Suggestions: suggestions}, nil
 }
 
-func buildPeriodView(period string, start, end time.Time, goal *readingGoal.ReadingGoal, sessions []readingSession.ReadingSession) GoalPeriodView {
-	pagesRead, booksRead := aggregateInWindow(sessions, start, end)
+func buildPeriodView(period string, start, end time.Time, goal *readingGoal.ReadingGoal, events []readingEvent.ReadingEvent, sessions []readingSession.ReadingSession, useSessionsFallback bool) GoalPeriodView {
+	pagesRead, booksRead := aggregateInWindow(events, sessions, start, end, useSessionsFallback)
+	if pagesRead < 0 {
+		pagesRead = 0
+	}
+	if booksRead < 0 {
+		booksRead = 0
+	}
 	view := GoalPeriodView{Period: period, StartDate: start, EndDate: end, PagesRead: pagesRead, BooksRead: booksRead, Status: "no_goal"}
 	if goal == nil {
 		return view
@@ -255,16 +268,26 @@ func buildPeriodView(period string, start, end time.Time, goal *readingGoal.Read
 	return view
 }
 
-func aggregateInWindow(sessions []readingSession.ReadingSession, start, end time.Time) (int, int) {
+func aggregateInWindow(events []readingEvent.ReadingEvent, sessions []readingSession.ReadingSession, start, end time.Time, useSessionsFallback bool) (int, int) {
 	pages := 0
-	books := map[string]struct{}{}
-	for _, ses := range sessions {
-		if !ses.Date.Before(start) && ses.Date.Before(end.Add(24*time.Hour)) {
-			pages += ses.PagesRead
-			books[ses.BookID.String()] = struct{}{}
+	books := 0
+	if useSessionsFallback {
+		booksByID := map[string]struct{}{}
+		for _, ses := range sessions {
+			if !ses.Date.Before(start) && ses.Date.Before(end.Add(24*time.Hour)) {
+				pages += ses.PagesRead
+				booksByID[ses.BookID.String()] = struct{}{}
+			}
+		}
+		return pages, len(booksByID)
+	}
+	for _, event := range events {
+		if !event.EventDate.Before(start) && event.EventDate.Before(end.Add(24*time.Hour)) {
+			pages += event.PagesDelta
+			books += event.CompletedDelta
 		}
 	}
-	return pages, len(books)
+	return pages, books
 }
 
 func weekWindow(now time.Time) (time.Time, time.Time) {
@@ -281,8 +304,8 @@ func monthWindow(now time.Time) (time.Time, time.Time) {
 	return start, start.AddDate(0, 1, -1)
 }
 
-func (s *Service) buildSuggestions(ctx context.Context, userID uuid.UUID, sessions []readingSession.ReadingSession) []GoalSuggestion {
-	signals := collectSignals(sessions)
+func (s *Service) buildSuggestions(ctx context.Context, userID uuid.UUID, sessions []readingSession.ReadingSession, events []readingEvent.ReadingEvent, useSessionsFallback bool) []GoalSuggestion {
+	signals := collectSignals(sessions, events, useSessionsFallback)
 	weeklyPages := recommendedWeeklyPages(signals)
 	monthlyPages := recommendedMonthlyPages(signals)
 
@@ -304,16 +327,24 @@ func (s *Service) buildSuggestions(ctx context.Context, userID uuid.UUID, sessio
 	return result
 }
 
-func collectSignals(sessions []readingSession.ReadingSession) Signals {
+func collectSignals(sessions []readingSession.ReadingSession, events []readingEvent.ReadingEvent, useSessionsFallback bool) Signals {
 	now := time.Now()
 	weeklyTotals := make([]int, 0, 6)
 	for i := 0; i < 6; i++ {
 		end := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).AddDate(0, 0, -(i * 7))
 		start := end.AddDate(0, 0, -6)
 		total := 0
-		for _, s := range sessions {
-			if !s.Date.Before(start) && s.Date.Before(end.Add(24*time.Hour)) {
-				total += s.PagesRead
+		if useSessionsFallback {
+			for _, ses := range sessions {
+				if !ses.Date.Before(start) && ses.Date.Before(end.Add(24*time.Hour)) {
+					total += ses.PagesRead
+				}
+			}
+		} else {
+			for _, event := range events {
+				if !event.EventDate.Before(start) && event.EventDate.Before(end.Add(24*time.Hour)) {
+					total += event.PagesDelta
+				}
 			}
 		}
 		weeklyTotals = append(weeklyTotals, total)
@@ -329,9 +360,17 @@ func collectSignals(sessions []readingSession.ReadingSession) Signals {
 		end := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).AddDate(0, -i+1, -1)
 		start := time.Date(end.Year(), end.Month(), 1, 0, 0, 0, 0, now.Location())
 		total := 0
-		for _, s := range sessions {
-			if !s.Date.Before(start) && s.Date.Before(end.Add(24*time.Hour)) {
-				total += s.PagesRead
+		if useSessionsFallback {
+			for _, ses := range sessions {
+				if !ses.Date.Before(start) && ses.Date.Before(end.Add(24*time.Hour)) {
+					total += ses.PagesRead
+				}
+			}
+		} else {
+			for _, event := range events {
+				if !event.EventDate.Before(start) && event.EventDate.Before(end.Add(24*time.Hour)) {
+					total += event.PagesDelta
+				}
 			}
 		}
 		monthlyTotals = append(monthlyTotals, total)

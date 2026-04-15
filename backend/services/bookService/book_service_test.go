@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"libro-backend/models/book"
@@ -113,5 +114,45 @@ func TestCreateRejectsInvalidPages(t *testing.T) {
 	err := svc.Create(context.Background(), &book.Book{Title: "", Author: "", TotalPages: 0})
 	if !errors.Is(err, customErr.ErrBadRequest) {
 		t.Fatalf("expected bad request, got %v", err)
+	}
+}
+
+func TestAnalyticsReadingPaceUsesCurrentMonthCompletions(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	lastMonth := now.AddDate(0, -1, 0)
+	currentPage := 120
+	currentPage2 := 300
+	repo := &fakeBookRepo{items: map[uuid.UUID]book.Book{
+		uuid.New(): {
+			ID:          uuid.New(),
+			UserID:      uuid.New(),
+			Title:       "This Month",
+			Author:      "Author",
+			TotalPages:  120,
+			Status:      constants.BookStatusFinished,
+			CurrentPage: &currentPage,
+			CompletedAt: &now,
+		},
+		uuid.New(): {
+			ID:          uuid.New(),
+			UserID:      uuid.New(),
+			Title:       "Last Month",
+			Author:      "Author",
+			TotalPages:  300,
+			Status:      constants.BookStatusFinished,
+			CurrentPage: &currentPage2,
+			CompletedAt: &lastMonth,
+		},
+	}}
+
+	svc := New(repo)
+	analytics, err := svc.Analytics(context.Background(), uuid.New())
+	if err != nil {
+		t.Fatalf("analytics failed: %v", err)
+	}
+	if analytics.ReadingPacePerMonth != 1 {
+		t.Fatalf("expected monthly completed books to be 1, got %d", analytics.ReadingPacePerMonth)
 	}
 }

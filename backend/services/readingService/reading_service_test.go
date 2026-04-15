@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"libro-backend/models/book"
+	"libro-backend/models/readingEvent"
 	"libro-backend/models/readingGoal"
 	"libro-backend/models/readingSession"
 )
@@ -16,6 +17,7 @@ type fakeReadingRepo struct {
 	goals     []readingGoal.ReadingGoal
 	sessions  []readingSession.ReadingSession
 	completed int64
+	events    []readingEvent.ReadingEvent
 }
 
 func (f *fakeReadingRepo) UpdateCurrentPage(_ context.Context, _, _ uuid.UUID, _ int) (*book.Book, error) {
@@ -52,6 +54,15 @@ func (f *fakeReadingRepo) ListGoals(_ context.Context, _ uuid.UUID) ([]readingGo
 func (f *fakeReadingRepo) CountCompletedBooksBetween(_ context.Context, _ uuid.UUID, _, _ time.Time) (int64, error) {
 	return f.completed, nil
 }
+func (f *fakeReadingRepo) SumEventPagesBetween(_ context.Context, _ uuid.UUID, _, _ time.Time) (int, error) {
+	return 0, nil
+}
+func (f *fakeReadingRepo) SumEventCompletionsBetween(_ context.Context, _ uuid.UUID, _, _ time.Time) (int, error) {
+	return 0, nil
+}
+func (f *fakeReadingRepo) ListEventsBetween(_ context.Context, _ uuid.UUID, _, _ time.Time) ([]readingEvent.ReadingEvent, error) {
+	return f.events, nil
+}
 
 func TestSaveGoalsAndGetOverview(t *testing.T) {
 	t.Parallel()
@@ -80,7 +91,7 @@ func TestGoalStatusExceeded(t *testing.T) {
 	start, end := weekWindow(time.Now())
 	target := 50
 	repo.goals = []readingGoal.ReadingGoal{{UserID: uid, Period: "weekly", TargetPages: &target, StartDate: &start, EndDate: &end, Source: "manual"}}
-	repo.sessions = []readingSession.ReadingSession{{UserID: uid, BookID: uuid.New(), Date: time.Now(), PagesRead: 90, Duration: 20}}
+	repo.events = []readingEvent.ReadingEvent{{UserID: uid, BookID: uuid.New(), EventDate: time.Now(), PagesDelta: 90}}
 	overview, err := svc.GetGoalsOverview(context.Background(), uid)
 	if err != nil {
 		t.Fatalf("overview failed: %v", err)
@@ -100,5 +111,25 @@ func TestSuggestionsWithSparseData(t *testing.T) {
 	}
 	if len(overview.Suggestions) != 0 {
 		t.Fatalf("expected no suggestions for sparse data, got %d", len(overview.Suggestions))
+	}
+}
+
+func TestGoalsOverviewFallsBackToSessionsWhenEventsMissing(t *testing.T) {
+	t.Parallel()
+	repo := &fakeReadingRepo{}
+	svc := New(repo)
+	uid := uuid.New()
+	start, end := weekWindow(time.Now())
+	target := 40
+	repo.goals = []readingGoal.ReadingGoal{{UserID: uid, Period: "weekly", TargetPages: &target, StartDate: &start, EndDate: &end, Source: "manual"}}
+	repo.sessions = []readingSession.ReadingSession{{UserID: uid, BookID: uuid.New(), Date: time.Now(), PagesRead: 45, Duration: 20}}
+	repo.events = nil
+
+	overview, err := svc.GetGoalsOverview(context.Background(), uid)
+	if err != nil {
+		t.Fatalf("overview failed: %v", err)
+	}
+	if overview.Weekly.PagesRead != 45 {
+		t.Fatalf("expected weekly pages from sessions fallback, got %d", overview.Weekly.PagesRead)
 	}
 }

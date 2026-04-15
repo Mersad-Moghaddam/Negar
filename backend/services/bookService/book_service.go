@@ -78,6 +78,14 @@ func (s *Service) Update(ctx context.Context, b *book.Book) error {
 		b.CompletedAt = &now
 		cp := b.TotalPages
 		b.CurrentPage = &cp
+	} else {
+		b.CompletedAt = nil
+		if b.Status == constants.BookStatusInLibrary || b.Status == constants.BookStatusNextToRead {
+			b.CurrentPage = nil
+		} else if b.CurrentPage == nil {
+			cp := 0
+			b.CurrentPage = &cp
+		}
 	}
 	return s.repo.Update(ctx, b)
 }
@@ -146,11 +154,15 @@ func (s *Service) Analytics(ctx context.Context, userID uuid.UUID) (*Analytics, 
 
 	var booksCompleted int64
 	var activeReading int64
+	booksCompletedThisMonth := 0
 	totalPagesRead := 0
 	for _, b := range books {
 		statusDistribution[b.Status] += 1
 		if b.Status == constants.BookStatusFinished {
 			booksCompleted += 1
+			if b.CompletedAt != nil && b.CompletedAt.Year() == now.Year() && b.CompletedAt.Month() == now.Month() {
+				booksCompletedThisMonth += 1
+			}
 		}
 		if b.Status == constants.BookStatusCurrentlyRead {
 			activeReading += 1
@@ -179,13 +191,7 @@ func (s *Service) Analytics(ctx context.Context, userID uuid.UUID) (*Analytics, 
 	if totalBooks > 0 {
 		completionRate = int(float64(booksCompleted) / float64(totalBooks) * 100)
 	}
-	readingPace := int(booksCompleted)
-	if len(monthly) > 0 {
-		readingPace = int(float64(booksCompleted) / 6.0)
-	}
-	if readingPace == 0 && booksCompleted > 0 {
-		readingPace = 1
-	}
+	readingPace := booksCompletedThisMonth
 
 	currentStreak := 0
 	for i := len(weekly) - 1; i >= 0; i-- {

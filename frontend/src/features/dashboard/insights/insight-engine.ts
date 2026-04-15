@@ -61,8 +61,17 @@ export function buildReadingInsight(input: InsightInput): ReadingInsightModel {
     .filter((session): session is ReadingSession & { parsedDate: Date } => Boolean(session.parsedDate) && session.parsedDate <= now)
     .sort((a, b) => b.parsedDate.getTime() - a.parsedDate.getTime())
 
-  const hasAnyActivity = sessions.length > 0 || (input.analytics?.base.totalPagesRead ?? 0) > 0
+  const books = input.books
+  const hasAnyActivity =
+    sessions.length > 0 ||
+    books.some((book) => book.currentPage > 0 || book.status === 'finished' || Boolean(book.completedAt)) ||
+    (input.analytics?.base.totalPagesRead ?? 0) > 0
   const activeBooks = input.books.filter((book) => book.status === 'currentlyReading')
+  const recentlyCompleted = books.filter((book) => {
+    if (!book.completedAt) return false
+    const completedAt = isValidDate(book.completedAt)
+    return Boolean(completedAt) && inLastDays(completedAt as Date, 6, now)
+  }).length
   const nearCompletionBook = activeBooks
     .filter((book) => book.progressPercentage >= 85 && book.progressPercentage < 100)
     .sort((a, b) => b.progressPercentage - a.progressPercentage)[0]
@@ -78,7 +87,13 @@ export function buildReadingInsight(input: InsightInput): ReadingInsightModel {
   })
 
   const activeDays7 = new Set(recent7.map((session) => session.parsedDate.toISOString().slice(0, 10))).size
-  const lastActivityDays = sessions[0] ? daysBetween(sessions[0].parsedDate, now) : null
+  const bookActivityDates = books
+    .map((book) => isValidDate(book.updatedAt))
+    .filter((date): date is Date => Boolean(date) && date <= now)
+    .sort((a, b) => b.getTime() - a.getTime())
+  const lastSessionActivity = sessions[0] ? daysBetween(sessions[0].parsedDate, now) : null
+  const lastBookActivity = bookActivityDates[0] ? daysBetween(bookActivityDates[0], now) : null
+  const lastActivityDays = [lastSessionActivity, lastBookActivity].filter((value): value is number => value !== null).sort((a, b) => a - b)[0] ?? null
   const weeklyGoal = input.goals.find((goal) => goal.period === 'weekly')
   const pagesLast7 = sumPagesInRange(input.sessions, 0, 6, now)
   const pagesPrev7 = sumPagesInRange(input.sessions, 7, 13, now)
@@ -123,6 +138,20 @@ export function buildReadingInsight(input: InsightInput): ReadingInsightModel {
       recommendationKey: 'dashboard.insights.recommendations.finishClosestBook',
       signals: [
         { labelKey: 'dashboard.insights.signals.closestBookProgress', value: Math.round(nearCompletionBook.progressPercentage), format: 'percent' },
+        { labelKey: 'dashboard.insights.signals.activeBooks', value: activeBooks.length, format: 'number' }
+      ]
+    })
+  }
+
+  if (recentlyCompleted > 0) {
+    candidates.push({
+      variant: 'positive',
+      priority: 88,
+      titleKey: 'dashboard.insights.titles.goalAhead',
+      messageKey: 'dashboard.insights.messages.momentum',
+      recommendationKey: 'dashboard.insights.recommendations.maintainGoal',
+      signals: [
+        { labelKey: 'dashboard.insights.signals.sessionsThisWeek', value: recent7.length, format: 'number' },
         { labelKey: 'dashboard.insights.signals.activeBooks', value: activeBooks.length, format: 'number' }
       ]
     })
