@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"libro-backend/pkg/apiresponse"
+	"libro-backend/repositories"
 	"libro-backend/services/apiErrCode"
 	"libro-backend/services/authService"
 	"libro-backend/services/bookService"
@@ -55,10 +56,19 @@ func (c *MainController) DashboardAnalytics(ctx *fiber.Ctx) error {
 	if err != nil {
 		return apiErrCode.RespondError(ctx, err)
 	}
-	sessions, err := c.service.reading.RecentSessions(ctx.Context(), uid, 120)
+	sessions, err := c.service.reading.RecentSessions(ctx.Context(), uid, 600)
 	if err != nil {
 		return apiErrCode.RespondError(ctx, err)
 	}
+	books, _, err := c.service.books.List(ctx.Context(), uid, repositories.BookFilter{})
+	if err != nil {
+		return apiErrCode.RespondError(ctx, err)
+	}
+	goals, err := c.service.reading.GoalProgress(ctx.Context(), uid)
+	if err != nil {
+		return apiErrCode.RespondError(ctx, err)
+	}
+
 	trend := make([]fiber.Map, 0, len(sessions))
 	activeDays := map[string]struct{}{}
 	totalPages := 0
@@ -82,7 +92,16 @@ func (c *MainController) DashboardAnalytics(ctx *fiber.Ctx) error {
 	} else if backlogCount <= 2 {
 		backlogHealth = "light"
 	}
-	return apiresponse.OK(ctx, fiber.Map{"base": analytics, "trend": trend, "consistencyScore": consistency, "backlogHealth": backlogHealth, "sessionPages": totalPages}, nil)
+
+	intelligence := buildAnalyticsIntelligence(time.Now(), books, sessions, goals)
+	return apiresponse.OK(ctx, fiber.Map{
+		"base":             analytics,
+		"trend":            trend,
+		"consistencyScore": consistency,
+		"backlogHealth":    backlogHealth,
+		"sessionPages":     totalPages,
+		"intelligence":     intelligence,
+	}, nil)
 }
 
 func (c *MainController) DashboardInsights(ctx *fiber.Ctx) error {

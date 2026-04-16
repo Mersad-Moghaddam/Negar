@@ -40,7 +40,39 @@ function makeAnalytics(totalPagesRead = 120): ReadingAnalytics {
     trend: [],
     consistencyScore: 40,
     backlogHealth: 'balanced',
-    sessionPages: 120
+    sessionPages: 120,
+    intelligence: {
+      totalReadingSessions: 4,
+      totalPagesRead,
+      totalFinishedBooks: 2,
+      activeBooksCount: 1,
+      dormantBooksCount: 0,
+      averagePagesPerSession: 20,
+      averagePagesPerActiveDay: 25,
+      completionRateAcrossStarted: 50,
+      averageCompletionVelocity: 12,
+      currentStreak: 2,
+      longestStreak: 4,
+      weeklyReadingMinutes: 80,
+      monthlyReadingMinutes: 240,
+      sessionsThisWeek: 2,
+      sessionsThisMonth: 5,
+      booksClosestToCompletion: [],
+      booksAtRiskOfStagnation: [],
+      trends: {
+        last7Days: {
+          sessions: { current: 2, prev: 1, change: 1, percent: 100, direction: 'up' },
+          pages: { current: 40, prev: 20, change: 20, percent: 100, direction: 'up' },
+          minutes: { current: 40, prev: 20, change: 20, percent: 100, direction: 'up' }
+        },
+        month: {
+          sessions: { current: 5, prev: 4, change: 1, percent: 25, direction: 'up' },
+          pages: { current: 120, prev: 100, change: 20, percent: 20, direction: 'up' },
+          minutes: { current: 220, prev: 180, change: 40, percent: 22, direction: 'up' }
+        }
+      },
+      insights: []
+    }
   }
 }
 

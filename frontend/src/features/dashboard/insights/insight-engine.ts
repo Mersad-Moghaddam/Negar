@@ -58,7 +58,7 @@ export function buildReadingInsight(input: InsightInput): ReadingInsightModel {
   const now = new Date()
   const sessions = [...input.sessions]
     .map((session) => ({ ...session, parsedDate: isValidDate(session.date) }))
-    .filter((session): session is ReadingSession & { parsedDate: Date } => Boolean(session.parsedDate) && session.parsedDate <= now)
+    .filter((session): session is ReadingSession & { parsedDate: Date } => session.parsedDate !== null && session.parsedDate <= now)
     .sort((a, b) => b.parsedDate.getTime() - a.parsedDate.getTime())
 
   const books = input.books
@@ -70,7 +70,8 @@ export function buildReadingInsight(input: InsightInput): ReadingInsightModel {
   const recentlyCompleted = books.filter((book) => {
     if (!book.completedAt) return false
     const completedAt = isValidDate(book.completedAt)
-    return Boolean(completedAt) && inLastDays(completedAt as Date, 6, now)
+    if (!completedAt) return false
+    return inLastDays(completedAt, 6, now)
   }).length
   const nearCompletionBook = activeBooks
     .filter((book) => book.progressPercentage >= 85 && book.progressPercentage < 100)
@@ -89,7 +90,7 @@ export function buildReadingInsight(input: InsightInput): ReadingInsightModel {
   const activeDays7 = new Set(recent7.map((session) => session.parsedDate.toISOString().slice(0, 10))).size
   const bookActivityDates = books
     .map((book) => isValidDate(book.updatedAt))
-    .filter((date): date is Date => Boolean(date) && date <= now)
+    .filter((date): date is Date => date !== null && date <= now)
     .sort((a, b) => b.getTime() - a.getTime())
   const lastSessionActivity = sessions[0] ? daysBetween(sessions[0].parsedDate, now) : null
   const lastBookActivity = bookActivityDates[0] ? daysBetween(bookActivityDates[0], now) : null

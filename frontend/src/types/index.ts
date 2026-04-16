@@ -104,6 +104,56 @@ export type WishlistItem = {
 
 export type AnalyticsPoint = { label: string; count: number }
 
+
+export type AnalyticsDelta = {
+  current: number
+  prev: number
+  change: number
+  percent: number
+  direction: 'up' | 'down' | 'flat'
+}
+
+export type AnalyticsComparison = {
+  sessions: AnalyticsDelta
+  pages: AnalyticsDelta
+  minutes: AnalyticsDelta
+}
+
+export type AnalyticsBookFocus = {
+  id: string
+  title: string
+  progressPercent: number
+  remainingPages: number
+  lastActivityDays?: number
+}
+
+export type ReadingIntelligence = {
+  totalReadingSessions: number
+  totalPagesRead: number
+  totalFinishedBooks: number
+  activeBooksCount: number
+  dormantBooksCount: number
+  averagePagesPerSession: number
+  averagePagesPerActiveDay: number
+  completionRateAcrossStarted: number
+  averageCompletionVelocity: number
+  currentStreak: number
+  longestStreak: number
+  weeklyReadingMinutes: number
+  monthlyReadingMinutes: number
+  sessionsThisWeek: number
+  sessionsThisMonth: number
+  bestReadingWeekday?: string
+  mostProductiveReadingWindow?: string
+  booksClosestToCompletion: AnalyticsBookFocus[]
+  booksAtRiskOfStagnation: AnalyticsBookFocus[]
+  trends: {
+    last7Days: AnalyticsComparison
+    month: AnalyticsComparison
+  }
+  insights: { tone: string; message: string }[]
+}
+
 export type ReadingAnalytics = {
   base: {
     booksCompleted: number
@@ -121,6 +171,7 @@ export type ReadingAnalytics = {
   consistencyScore: number
   backlogHealth: 'light' | 'balanced' | 'heavy'
   sessionPages: number
+  intelligence: ReadingIntelligence
 }
 
 export type ReadingInsight = { tone: string; message: string }

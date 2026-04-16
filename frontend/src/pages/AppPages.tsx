@@ -40,8 +40,13 @@ import {
   useUpdateBookProgressMutation,
   useUpdateBookStatusMutation
 } from '../features/books/queries/use-books'
+import { DashboardMetricGrid } from '../features/dashboard/components/dashboard-metric-grid'
+import { NearFinishCard } from '../features/dashboard/components/near-finish-card'
 import { ReadingGoalsCard } from '../features/dashboard/components/reading-goals-card'
 import { ReadingInsightsCard } from '../features/dashboard/components/reading-insights-card'
+import { ReadingTrendCard } from '../features/dashboard/components/reading-trend-card'
+import { StalledBooksCard } from '../features/dashboard/components/stalled-books-card'
+import { StreakCard } from '../features/dashboard/components/streak-card'
 import { buildReadingInsight } from '../features/dashboard/insights/insight-engine'
 import {
   useCreateSessionMutation,
@@ -198,6 +203,8 @@ export function Dashboard() {
         <StatCard title={t('dashboard.readingPace')} value={numberFormatter.format(analytics?.base.readingPacePerMonth ?? 0)} icon={LineChart} />
       </div>
 
+      {analytics?.intelligence ? <DashboardMetricGrid intelligence={analytics.intelligence} formatNumber={numberFormatter.format} /> : null}
+
       <div className="grid gap-3 xl:grid-cols-[1.45fr_1fr]">
         <SectionCard>
           <SectionHeader title={t('dashboard.currentSnapshot')} description={t('dashboard.currentSnapshotDesc')} />
@@ -259,35 +266,42 @@ export function Dashboard() {
               void sessionsQuery.refetch()
             }}
           />
+          {analytics?.intelligence?.insights?.length ? <div className="space-y-2">
+            {analytics.intelligence.insights.map((item, idx) => (
+              <p key={`${item.tone}-${idx}`} className="rounded-lg border border-border bg-surface px-3 py-2 text-xs text-mutedForeground">{item.message}</p>
+            ))}
+          </div> : null}
           {reminder ? <p className="text-small text-mutedForeground">{reminder.enabled ? t('dashboard.reminderOn', { time: reminder.time }) : t('dashboard.reminderOff')}</p> : null}
           <p className="text-small text-mutedForeground">{t('dashboard.sessionsCount', { count: sessions.length })}</p>
         </SectionCard>
       </div>
 
-      <div className="grid gap-3 xl:grid-cols-2">
-        <SectionCard>
-          <SectionHeader title={t('dashboard.analyticsTitle')} description={t('dashboard.analyticsDesc')} />
-          <QueryState isLoading={analyticsQuery.isLoading} isError={analyticsQuery.isError} isEmpty={!analytics} emptyTitle={t('dashboard.emptyAnalyticsTitle')} emptyDescription={t('dashboard.emptyAnalyticsDescription')} onRetry={() => void analyticsQuery.refetch()}>
-            {analytics ? <div className="grid gap-3 sm:grid-cols-2">
-              <div className="metric-tile"><p>{t('dashboard.totalPagesRead')}</p><p>{numberFormatter.format(analytics.base.totalPagesRead)}</p></div>
-              <div className="metric-tile"><p>{t('dashboard.completionRate')}</p><p>{analytics.base.completionRate}%</p></div>
-              <div className="metric-tile"><p>{t('dashboard.readingPace')}</p><p>{numberFormatter.format(analytics.base.readingPacePerMonth)}</p></div>
-              <div className="metric-tile"><p>{t('dashboard.consistency')}</p><p>{analytics.consistencyScore}%</p></div>
-            </div> : null}
-          </QueryState>
-        </SectionCard>
+      <QueryState isLoading={analyticsQuery.isLoading} isError={analyticsQuery.isError} isEmpty={!analytics?.intelligence} emptyTitle={t('dashboard.emptyAnalyticsTitle')} emptyDescription={t('dashboard.emptyAnalyticsDescription')} onRetry={() => void analyticsQuery.refetch()}>
+        {analytics?.intelligence ? (
+          <>
+            <div className="grid gap-3 xl:grid-cols-2">
+              <ReadingTrendCard title="Last 7 days vs previous 7 days" comparison={analytics.intelligence.trends.last7Days} />
+              <ReadingTrendCard title="This month vs previous month" comparison={analytics.intelligence.trends.month} />
+            </div>
+            <div className="grid gap-3 xl:grid-cols-3">
+              <StreakCard current={analytics.intelligence.currentStreak} longest={analytics.intelligence.longestStreak} bestWeekday={analytics.intelligence.bestReadingWeekday} />
+              <NearFinishCard items={analytics.intelligence.booksClosestToCompletion} />
+              <StalledBooksCard items={analytics.intelligence.booksAtRiskOfStagnation} />
+            </div>
+          </>
+        ) : null}
+      </QueryState>
 
-        <SectionCard>
-          <SectionHeader title={t('dashboard.goalsTitle')} description={t('dashboard.goalsDesc')} />
-          <ReadingGoalsCard
-            goals={goals}
-            isSaving={saveGoal.isPending}
-            onSave={async (payload) => {
-              await saveGoal.mutateAsync(payload)
-            }}
-          />
-        </SectionCard>
-      </div>
+      <SectionCard>
+        <SectionHeader title={t('dashboard.goalsTitle')} description={t('dashboard.goalsDesc')} />
+        <ReadingGoalsCard
+          goals={goals}
+          isSaving={saveGoal.isPending}
+          onSave={async (payload) => {
+            await saveGoal.mutateAsync(payload)
+          }}
+        />
+      </SectionCard>
     </div>
   )
 }
