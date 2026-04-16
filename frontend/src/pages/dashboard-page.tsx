@@ -13,6 +13,7 @@ import {
   useBooksQuery,
   useUpdateBookProgressMutation
 } from '../features/books/queries/use-books'
+import { DashboardSummaryStats } from '../features/dashboard/components/dashboard-summary-stats'
 import { ReadingGoalsCard } from '../features/dashboard/components/reading-goals-card'
 import { ReadingInsightsCard } from '../features/dashboard/components/reading-insights-card'
 import { buildReadingInsight } from '../features/dashboard/insights/insight-engine'
@@ -28,7 +29,7 @@ import { QueryState } from '../shared/components/query-state'
 import { useI18n } from '../shared/i18n/i18n-provider'
 import { BookStatus } from '../types'
 
-import { BookCover, PageHeading, StatCard } from './modules/page-primitives'
+import { BookCover, PageHeading } from './modules/page-primitives'
 
 export function DashboardPage() {
   const { t, locale } = useI18n()
@@ -126,12 +127,35 @@ export function DashboardPage() {
   return (
     <div className="space-y-4 sm:space-y-5">
       <PageHeading title={t('dashboard.title')} />
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard title={t('status.currentlyReading')} value={numberFormatter.format(counts.currentlyReading)} icon={BookPlus} />
-        <StatCard title={t('status.inLibrary')} value={numberFormatter.format(counts.inLibrary)} icon={LibraryBig} />
-        <StatCard title={t('status.finished')} value={numberFormatter.format(counts.finished)} icon={ListChecks} />
-        <StatCard title={t('dashboard.readingPace')} value={numberFormatter.format(analytics?.base.readingPacePerMonth ?? 0)} icon={LineChart} />
-      </div>
+      <DashboardSummaryStats
+        stats={[
+          {
+            key: 'currently-reading',
+            label: t('status.currentlyReading'),
+            value: numberFormatter.format(counts.currentlyReading),
+            icon: BookPlus,
+            isPrimary: true
+          },
+          {
+            key: 'in-library',
+            label: t('status.inLibrary'),
+            value: numberFormatter.format(counts.inLibrary),
+            icon: LibraryBig
+          },
+          {
+            key: 'finished',
+            label: t('status.finished'),
+            value: numberFormatter.format(counts.finished),
+            icon: ListChecks
+          },
+          {
+            key: 'reading-pace',
+            label: t('dashboard.readingPace'),
+            value: numberFormatter.format(analytics?.base.readingPacePerMonth ?? 0),
+            icon: LineChart
+          }
+        ]}
+      />
 
       {!books.length ? (
         <EmptyState

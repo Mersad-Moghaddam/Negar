@@ -1,6 +1,4 @@
-import { LibraryBig, Sparkles } from 'lucide-react'
-
-import { Card } from '../../components/ui/card'
+import { LibraryBig } from 'lucide-react'
 
 export function PageHeading({ title }: { title: string }) {
   return <h1 className="sr-only">{title}</h1>
@@ -37,27 +35,5 @@ export function BookCover({ title, coverUrl }: { title: string; coverUrl?: strin
     <div className="flex h-24 w-16 items-center justify-center rounded-lg border border-dashed border-border bg-surface text-mutedForeground">
       <LibraryBig className="h-4 w-4" />
     </div>
-  )
-}
-
-export function StatCard({
-  title,
-  value,
-  icon: Icon
-}: {
-  title: string
-  value: string | number
-  icon: typeof Sparkles
-}) {
-  return (
-    <Card className="surface-hover p-4 sm:p-5">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-small text-mutedForeground">{title}</p>
-        <span className="rounded-lg bg-surface p-2 text-mutedForeground">
-          <Icon className="h-4 w-4" />
-        </span>
-      </div>
-      <p className="mt-3 text-3xl font-semibold">{value}</p>
-    </Card>
   )
 }
