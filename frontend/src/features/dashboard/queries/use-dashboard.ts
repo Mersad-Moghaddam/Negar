@@ -1,7 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { queryKeys } from '../../../shared/query/query-keys'
-import { createSession, fetchAnalytics, fetchGoals, fetchReminder, fetchSessions, updateGoal } from '../api/dashboard-api'
+import { createSession, fetchAnalytics, fetchGoals, fetchReminder, fetchSessions, fetchSummary, updateGoal } from '../api/dashboard-api'
+
+export function useDashboardSummary() {
+  return useQuery({ queryKey: queryKeys.dashboard.summary, queryFn: fetchSummary })
+}
 
 export function useDashboardAnalytics() {
   return useQuery({ queryKey: queryKeys.dashboard.analytics, queryFn: fetchAnalytics })

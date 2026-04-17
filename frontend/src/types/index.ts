@@ -125,6 +125,14 @@ export type ReadingAnalytics = {
 
 export type ReadingInsight = { tone: string; message: string }
 
+export type DashboardSummary = {
+  counts: Record<BookStatus | 'total', number>
+  recentBooks: Book[]
+  currentlyReading: Book[]
+  goalProgress: GoalProgress[]
+  nextReminderAt?: string | null
+}
+
 export type ReminderSettings = {
   enabled: boolean
   time: string

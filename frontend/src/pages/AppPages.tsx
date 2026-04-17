@@ -45,6 +45,7 @@ import { ReadingInsightsCard } from '../features/dashboard/components/reading-in
 import { buildReadingInsight } from '../features/dashboard/insights/insight-engine'
 import {
   useCreateSessionMutation,
+  useDashboardSummary,
   useDashboardAnalytics,
   useDashboardReminder,
   useGoalProgress,
@@ -130,6 +131,7 @@ function StatCard({ title, value, icon: Icon }: { title: string; value: string |
 
 export function Dashboard() {
   const { t, locale } = useI18n()
+  const summaryQuery = useDashboardSummary()
   const booksQuery = useBooksQuery()
   const analyticsQuery = useDashboardAnalytics()
   const reminderQuery = useDashboardReminder()
@@ -184,6 +186,9 @@ export function Dashboard() {
     books.forEach((book) => (base[book.status] += 1))
     return base
   }, [books])
+  const totalLibraryCount = summaryQuery.data?.counts.total ?? books.length
+  const currentlyReadingCount = summaryQuery.data?.counts.currentlyReading ?? counts.currentlyReading
+  const finishedCount = summaryQuery.data?.counts.finished ?? counts.finished
 
   const activeBook = books.find((book) => book.status === 'currentlyReading')
   const numberFormatter = useMemo(() => new Intl.NumberFormat(locale === 'fa' ? 'fa-IR' : 'en-US'), [locale])
@@ -192,9 +197,9 @@ export function Dashboard() {
     <div className="space-y-4 sm:space-y-5">
       <PageHeading title={t('dashboard.title')} />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard title={t('status.currentlyReading')} value={numberFormatter.format(counts.currentlyReading)} icon={BookPlus} />
-        <StatCard title={t('status.inLibrary')} value={numberFormatter.format(counts.inLibrary)} icon={LibraryBig} />
-        <StatCard title={t('status.finished')} value={numberFormatter.format(counts.finished)} icon={ListChecks} />
+        <StatCard title={t('status.currentlyReading')} value={numberFormatter.format(currentlyReadingCount)} icon={BookPlus} />
+        <StatCard title={t('dashboard.libraryTotal')} value={numberFormatter.format(totalLibraryCount)} icon={LibraryBig} />
+        <StatCard title={t('status.finished')} value={numberFormatter.format(finishedCount)} icon={ListChecks} />
         <StatCard title={t('dashboard.readingPace')} value={numberFormatter.format(analytics?.base.readingPacePerMonth ?? 0)} icon={LineChart} />
       </div>
 
@@ -293,12 +298,13 @@ export function Dashboard() {
 }
 
 export function Library() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const toast = useToast()
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
   const [genre, setGenre] = useState('')
   const [sortBy, setSortBy] = useState<'updated_at' | 'title'>('updated_at')
+  const summaryQuery = useDashboardSummary()
   const booksQuery = useBooksQuery({ search, status, genre, sortBy, order: 'desc' })
   const createBookMutation = useCreateBookMutation()
   const deleteBookMutation = useDeleteBookMutation()
@@ -315,6 +321,9 @@ export function Library() {
       toast.error(t('library.deleteError'))
     }
   })
+  const numberFormatter = useMemo(() => new Intl.NumberFormat(locale === 'fa' ? 'fa-IR' : 'en-US'), [locale])
+  const totalLibraryCount = summaryQuery.data?.counts.total ?? booksQuery.data?.length ?? 0
+  const visibleCount = booksQuery.data?.length ?? 0
 
   return (
     <div className="space-y-4 sm:space-y-5">
@@ -340,6 +349,10 @@ export function Library() {
         <Select value={sortBy} onChange={(e) => setSortBy(e.target.value as 'updated_at' | 'title')}><option value="updated_at">{t('library.sortRecent')}</option><option value="title">{t('library.sortTitle')}</option></Select>
         {(search || status || genre) ? <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setStatus(''); setGenre('') }}>{t('library.clearFilters')}</Button> : <div className="hidden xl:block" />}
       </DataToolbar></Card>
+      <p className="text-small text-mutedForeground">
+        {t('library.collectionSummary', { visible: numberFormatter.format(visibleCount), total: numberFormatter.format(totalLibraryCount) })}
+      </p>
+      <p className="text-xs text-mutedForeground">{t('library.allStatusesHint')}</p>
 
       <QueryState isLoading={booksQuery.isLoading} isError={booksQuery.isError} isEmpty={!booksQuery.data?.length} emptyTitle={t('library.noBooksTitle')} emptyDescription={t('library.noBooksDescription')} onRetry={() => void booksQuery.refetch()}>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
