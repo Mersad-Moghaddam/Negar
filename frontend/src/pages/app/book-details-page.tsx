@@ -23,6 +23,7 @@ import {
   useBookQuery,
   useCreateBookNoteMutation,
   useDeleteBookMutation,
+  useDeleteBookNoteMutation,
   useUpdateBookMutation,
   useUpdateBookProgressMutation,
   useUpdateBookStatusMutation
@@ -46,6 +47,7 @@ export function BookDetails({ id }: { id: string }) {
   const notesQuery = useBookNotesQuery(id)
   const sessionsQuery = useSessions()
   const addNote = useCreateBookNoteMutation(id)
+  const deleteNote = useDeleteBookNoteMutation(id)
 
   const form = useForm<ProgressValues>({
     resolver: zodResolver(progressSchema),
@@ -236,8 +238,23 @@ export function BookDetails({ id }: { id: string }) {
         <div className="space-y-2">
           {notes.slice(0, 2).map((n) => (
             <div key={n.id} className="rounded-xl border border-border bg-surface p-3 text-sm">
-              <p>{n.note}</p>
-              {n.highlight ? <p className="mt-1 text-mutedForeground">“{n.highlight}”</p> : null}
+              <div className="flex items-start gap-2">
+                <div className="flex-1">
+                  <p>{n.note}</p>
+                  {n.highlight ? <p className="mt-1 text-mutedForeground">“{n.highlight}”</p> : null}
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 rounded-md p-0 text-mutedForeground hover:text-destructive"
+                  onClick={() => {
+                    void deleteNote.mutateAsync(n.id)
+                  }}
+                  aria-label={t('books.delete')}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           ))}
           {!notes.length ? <p className="text-sm text-mutedForeground">{t('books.notesEmpty')}</p> : null}
