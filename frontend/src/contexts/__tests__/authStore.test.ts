@@ -54,6 +54,7 @@ describe('authStore', () => {
     expect(authStore.getState().accessToken).toBeNull()
     expect(authStore.getState().refreshToken).toBeNull()
     expect(localStorage.getItem(storageKey)).toBeNull()
+    expect(localStorage.getItem(legacyStorageKey)).toBeNull()
   })
 
   it('hydrates from legacy storage key and migrates to the new key', () => {
@@ -76,5 +77,26 @@ describe('authStore', () => {
       accessToken: 'legacy-access',
       refreshToken: 'legacy-refresh'
     })
+    expect(localStorage.getItem(legacyStorageKey)).toBeNull()
+  })
+
+  it('does not rehydrate session from legacy key after logout', () => {
+    localStorage.setItem(
+      legacyStorageKey,
+      JSON.stringify({
+        user: { id: 'u-5', name: 'Nima', email: 'nima@example.com' },
+        accessToken: 'legacy-access-2',
+        refreshToken: 'legacy-refresh-2'
+      })
+    )
+
+    authStore.getState().hydrate()
+    authStore.getState().logout()
+    authStore.getState().hydrate()
+
+    const state = authStore.getState()
+    expect(state.user).toBeNull()
+    expect(state.accessToken).toBeNull()
+    expect(state.refreshToken).toBeNull()
   })
 })

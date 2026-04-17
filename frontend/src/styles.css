@@ -109,9 +109,11 @@
 
   .brand-wordmark-fa {
     font-family: 'Noto Nastaliq Urdu', 'Vazirmatn', serif;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0;
-    line-height: 1.45;
+    line-height: 1.05;
+    white-space: nowrap;
+    display: inline-block;
   }
 
   .page-enter {
