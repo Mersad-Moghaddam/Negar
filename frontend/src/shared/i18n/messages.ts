@@ -432,11 +432,11 @@ export const messages = {
       readingFlow: 'جریان مطالعه',
       account: 'حساب کاربری',
       platformTitle: 'نگار',
-      platformSubtitle: 'همراه مطالعه ات;',
+      platformSubtitle: 'همراه مطالعه ات',
       focusMode: 'حالت تمرکز'
     },
     landing: {
-      eyebrow: 'همراه مطالعه ات;',
+      eyebrow: 'همراه مطالعه ات',
       title: 'کتاب خواندن را به یک عادت واقعی تبدیل کن.',
       subtitle:
         'نگار کمک می‌کند کتاب‌هایت را مرتب کنی، پیشرفتت را ببینی و بدون شلوغی، مسیر مطالعه‌ات را جلو ببری.',
