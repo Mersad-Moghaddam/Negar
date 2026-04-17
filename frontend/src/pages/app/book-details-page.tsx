@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { NotebookPen } from 'lucide-react'
+import { NotebookPen, Trash2 } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
@@ -22,6 +22,7 @@ import {
   useBookNotesQuery,
   useBookQuery,
   useCreateBookNoteMutation,
+  useDeleteBookNoteMutation,
   useDeleteBookMutation,
   useUpdateBookMutation,
   useUpdateBookProgressMutation,
@@ -44,6 +45,7 @@ export function BookDetails({ id }: { id: string }) {
   const deleteBook = useDeleteBookMutation()
   const notesQuery = useBookNotesQuery(id)
   const addNote = useCreateBookNoteMutation(id)
+  const deleteNote = useDeleteBookNoteMutation(id)
 
   const form = useForm<ProgressValues>({ resolver: zodResolver(progressSchema), defaultValues: { currentPage: 0 } })
   const editForm = useForm<EditBookDetailsValues>({
@@ -139,7 +141,34 @@ export function BookDetails({ id }: { id: string }) {
           <FieldBlock label={t('books.highlightLabel')}><Input placeholder={t('books.highlightPlaceholder')} {...noteForm.register('highlight')} /></FieldBlock>
           <Button type="submit" size="sm" className="w-full sm:w-auto">{t('books.saveNote')}</Button>
         </form>
-        <div className="mt-3 space-y-2">{notesQuery.data?.map((n) => <div key={n.id} className="rounded-xl border border-border bg-surface p-3 text-sm"><p>{n.note}</p>{n.highlight ? <p className="mt-1 text-mutedForeground">“{n.highlight}”</p> : null}</div>)}{!notesQuery.data?.length ? <p className="text-sm text-mutedForeground">{t('books.notesEmpty')}</p> : null}</div>
+        <div className="mt-3 space-y-2">
+          {notesQuery.data?.map((n) => (
+            <div key={n.id} className="rounded-xl border border-border bg-surface p-3 text-sm">
+              <div className="mb-1 flex items-start justify-between gap-2">
+                <p className="leading-6">{n.note}</p>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 shrink-0 p-0 text-mutedForeground hover:text-destructive"
+                  aria-label={t('books.deleteNote')}
+                  disabled={deleteNote.isPending}
+                  onClick={async () => {
+                    try {
+                      await deleteNote.mutateAsync(n.id)
+                      toast.success(t('books.noteDeleted'))
+                    } catch {
+                      toast.error(t('books.noteDeleteError'))
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              {n.highlight ? <p className="mt-1 text-mutedForeground">“{n.highlight}”</p> : null}
+            </div>
+          ))}
+          {!notesQuery.data?.length ? <p className="text-sm text-mutedForeground">{t('books.notesEmpty')}</p> : null}
+        </div>
       </SectionCard>
       <SectionCard>
         <SectionHeader title={t('books.actions')} description={t('books.actionsDescription')} />

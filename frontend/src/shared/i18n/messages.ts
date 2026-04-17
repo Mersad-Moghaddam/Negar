@@ -380,7 +380,10 @@ export const messages = {
       notePlaceholder: 'Your note',
       highlightPlaceholder: 'Optional quote/highlight',
       saveNote: 'Save note',
-      notesEmpty: 'No notes yet. Capture your first thought from this book.'
+      notesEmpty: 'No notes yet. Capture your first thought from this book.',
+      deleteNote: 'Delete note',
+      noteDeleted: 'Note deleted.',
+      noteDeleteError: 'Could not delete note.'
     },
     query: {
       errorTitle: 'Something went wrong',
@@ -772,7 +775,10 @@ export const messages = {
       notePlaceholder: 'یادداشت شما',
       highlightPlaceholder: 'یک نقل‌قول یا نکتهٔ مهم (اختیاری)',
       saveNote: 'ذخیره یادداشت',
-      notesEmpty: 'هنوز یادداشتی ثبت نشده است. اولین برداشتت را بنویس.'
+      notesEmpty: 'هنوز یادداشتی ثبت نشده است. اولین برداشتت را بنویس.',
+      deleteNote: 'حذف یادداشت',
+      noteDeleted: 'یادداشت حذف شد.',
+      noteDeleteError: 'حذف یادداشت ناموفق بود.'
     },
     query: {
       errorTitle: 'مشکلی پیش آمد',
