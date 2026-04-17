@@ -34,6 +34,7 @@ export function Landing() {
   const { t, tm } = useI18n()
   const valueCards = tm<Array<{ title: string; text: string }>>('landing.valueCards') ?? []
   const testimonials = tm<Array<{ quote: string; author: string }>>('landing.testimonials') ?? []
+  const productPreviewLabel = t('landing.productPreview')
 
   return (
     <div className={wrap}>
@@ -51,7 +52,7 @@ export function Landing() {
       <section className="mx-auto max-w-6xl space-y-4 sm:space-y-6">
         <Card className="grid gap-5 p-4 sm:gap-6 sm:p-6 lg:grid-cols-[1.1fr_0.9fr] lg:p-9">
           <div className="space-y-5">
-            <Badge className="w-fit">{t('landing.productPreview')}</Badge>
+            {productPreviewLabel ? <Badge className="w-fit">{productPreviewLabel}</Badge> : null}
             <h1 className="max-w-2xl text-3xl font-semibold leading-tight text-foreground sm:text-hero">{t('landing.title')}</h1>
             <p className="max-w-xl text-sm text-mutedForeground sm:text-body">{t('landing.subtitle')}</p>
             <div className="grid gap-2 sm:flex sm:flex-wrap sm:gap-3">
