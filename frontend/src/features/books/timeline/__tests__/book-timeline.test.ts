@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 
 import { ReadingSession } from '../../../../types'
-import { buildBookTimeline } from '../book-timeline'
+import { buildBookTimeline, groupTimelineByDay } from '../book-timeline'
 
 let sessionCounter = 0
 
@@ -38,8 +38,16 @@ describe('buildBookTimeline', () => {
     )
 
     expect(model.items.map((item) => item.id)).toEqual(['a', 'b'])
-    expect(model.items[0]).toMatchObject({ progressBefore: 100, progressAfter: 120, progressDelta: 20 })
-    expect(model.items[1]).toMatchObject({ progressBefore: 70, progressAfter: 100, progressDelta: 30 })
+    expect(model.items[0]).toMatchObject({
+      progressBefore: 100,
+      progressAfter: 120,
+      progressDelta: 20
+    })
+    expect(model.items[1]).toMatchObject({
+      progressBefore: 70,
+      progressAfter: 100,
+      progressDelta: 30
+    })
   })
 
   it('sets paused momentum and recover action after long gap', () => {
@@ -62,5 +70,24 @@ describe('buildBookTimeline', () => {
 
     expect(model.summary.momentum).toBe('active')
     expect(model.summary.nextActionKey).toBe('finish')
+  })
+
+  it('groups timeline items by active day and keeps newest day first', () => {
+    const model = buildBookTimeline(
+      [
+        makeSession({ id: 'a', date: '2026-04-16T18:30:00.000Z', pagesRead: 8 }),
+        makeSession({ id: 'b', date: '2026-04-16T12:30:00.000Z', pagesRead: 7 }),
+        makeSession({ id: 'c', date: '2026-04-14', pagesRead: 12 })
+      ],
+      120,
+      300
+    )
+
+    const groups = groupTimelineByDay(model.items)
+
+    expect(groups.map((group) => group.dayKey)).toEqual(['2026-04-16', '2026-04-14'])
+    expect(groups[0]).toMatchObject({ sessionCount: 2, totalProgressDelta: 15 })
+    expect(groups[0].items.map((item) => item.id)).toEqual(['a', 'b'])
+    expect(groups[1]).toMatchObject({ sessionCount: 1, totalProgressDelta: 12 })
   })
 })
