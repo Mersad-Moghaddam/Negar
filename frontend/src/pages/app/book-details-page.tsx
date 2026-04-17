@@ -23,6 +23,7 @@ import {
   useBookQuery,
   useCreateBookNoteMutation,
   useDeleteBookMutation,
+  useDeleteBookNoteMutation,
   useUpdateBookMutation,
   useUpdateBookProgressMutation,
   useUpdateBookStatusMutation
@@ -46,6 +47,7 @@ export function BookDetails({ id }: { id: string }) {
   const notesQuery = useBookNotesQuery(id)
   const sessionsQuery = useSessions()
   const addNote = useCreateBookNoteMutation(id)
+  const deleteNote = useDeleteBookNoteMutation(id)
 
   const form = useForm<ProgressValues>({
     resolver: zodResolver(progressSchema),
