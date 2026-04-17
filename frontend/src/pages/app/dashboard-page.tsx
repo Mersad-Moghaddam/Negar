@@ -1,7 +1,6 @@
 import { BookPlus, LibraryBig, LineChart, ListChecks } from 'lucide-react'
 import { useMemo } from 'react'
 
-import heroBookIllustration from '../../assets/hero-open-book.svg'
 import { Progress } from '../../components/UI'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
@@ -93,25 +92,6 @@ export function Dashboard() {
   return (
     <div className="space-y-4 sm:space-y-5">
       <PageHeading title={t('dashboard.title')} />
-
-      <SectionCard className="overflow-hidden p-0">
-        <div className="relative isolate bg-gradient-to-br from-primary/15 via-primary/5 to-surface px-4 py-4 sm:px-5 sm:py-5">
-          <div className="absolute -right-10 -top-16 h-40 w-40 rounded-full bg-primary/10 blur-2xl" aria-hidden="true" />
-          <div className="relative flex flex-wrap items-center justify-between gap-3">
-            <div className="min-w-0 space-y-1">
-              <p className="eyebrow">{t('dashboard.title')}</p>
-              <p className="text-lg font-semibold tracking-tight sm:text-xl">{t('dashboard.currentSnapshot')}</p>
-              <p className="text-xs text-mutedForeground sm:text-sm">{t('dashboard.currentSnapshotDesc')}</p>
-            </div>
-            <img
-              src={heroBookIllustration}
-              alt=""
-              className="h-16 w-16 shrink-0 opacity-90 sm:h-20 sm:w-20"
-              aria-hidden="true"
-            />
-          </div>
-        </div>
-      </SectionCard>
 
       <div className="grid grid-cols-2 gap-2.5 sm:gap-3 xl:grid-cols-4">
         <StatCard
