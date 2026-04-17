@@ -523,7 +523,7 @@ export const messages = {
       totalPagesRead: 'صفحات خوانده‌شده',
       completionRate: 'نرخ تکمیل',
       readingPace: 'کتاب در ماه',
-      libraryTotal: 'کتابخانه (کل)',
+      libraryTotal: 'کتابخانه',
       currentStreak: 'رشته هفتگی',
       reminderOn: 'یادآور در ساعت {time} فعال است.',
       reminderOff: 'یادآور غیرفعال است.',

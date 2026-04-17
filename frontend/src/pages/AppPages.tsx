@@ -298,13 +298,12 @@ export function Dashboard() {
 }
 
 export function Library() {
-  const { t, locale } = useI18n()
+  const { t } = useI18n()
   const toast = useToast()
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
   const [genre, setGenre] = useState('')
   const [sortBy, setSortBy] = useState<'updated_at' | 'title'>('updated_at')
-  const summaryQuery = useDashboardSummary()
   const booksQuery = useBooksQuery({ search, status, genre, sortBy, order: 'desc' })
   const createBookMutation = useCreateBookMutation()
   const deleteBookMutation = useDeleteBookMutation()
@@ -321,9 +320,6 @@ export function Library() {
       toast.error(t('library.deleteError'))
     }
   })
-  const numberFormatter = useMemo(() => new Intl.NumberFormat(locale === 'fa' ? 'fa-IR' : 'en-US'), [locale])
-  const totalLibraryCount = summaryQuery.data?.counts.total ?? booksQuery.data?.length ?? 0
-  const visibleCount = booksQuery.data?.length ?? 0
 
   return (
     <div className="space-y-4 sm:space-y-5">
@@ -349,10 +345,6 @@ export function Library() {
         <Select value={sortBy} onChange={(e) => setSortBy(e.target.value as 'updated_at' | 'title')}><option value="updated_at">{t('library.sortRecent')}</option><option value="title">{t('library.sortTitle')}</option></Select>
         {(search || status || genre) ? <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setStatus(''); setGenre('') }}>{t('library.clearFilters')}</Button> : <div className="hidden xl:block" />}
       </DataToolbar></Card>
-      <p className="text-small text-mutedForeground">
-        {t('library.collectionSummary', { visible: numberFormatter.format(visibleCount), total: numberFormatter.format(totalLibraryCount) })}
-      </p>
-      <p className="text-xs text-mutedForeground">{t('library.allStatusesHint')}</p>
 
       <QueryState isLoading={booksQuery.isLoading} isError={booksQuery.isError} isEmpty={!booksQuery.data?.length} emptyTitle={t('library.noBooksTitle')} emptyDescription={t('library.noBooksDescription')} onRetry={() => void booksQuery.refetch()}>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
