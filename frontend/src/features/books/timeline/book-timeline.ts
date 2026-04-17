@@ -28,9 +28,30 @@ export type BookTimelineModel = {
   summary: TimelineSummary
 }
 
+export type TimelineDayGroup = {
+  dayKey: string
+  totalProgressDelta: number
+  sessionCount: number
+  items: TimelineItem[]
+}
+
 function toDate(value: string) {
   const parsed = new Date(value)
   return Number.isFinite(parsed.getTime()) ? parsed : null
+}
+
+function toUtcDayKey(date: Date) {
+  const year = date.getUTCFullYear()
+  const month = `${date.getUTCMonth() + 1}`.padStart(2, '0')
+  const day = `${date.getUTCDate()}`.padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function toSessionDayKey(value: string) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
+  if (/^\d{4}-\d{2}-\d{2}T00:00:00(?:\.\d+)?Z$/.test(value)) return value.slice(0, 10)
+  const parsed = toDate(value)
+  return parsed ? toUtcDayKey(parsed) : value.slice(0, 10)
 }
 
 function daysBetween(older: Date, newer: Date) {
@@ -75,7 +96,10 @@ export function buildBookTimeline(
   })
 
   const recentSessions = ordered.filter((session) => daysBetween(session.parsedDate, now) <= 13)
-  const recentPages = recentSessions.reduce((sum, session) => sum + Math.max(session.pagesRead ?? 0, 0), 0)
+  const recentPages = recentSessions.reduce(
+    (sum, session) => sum + Math.max(session.pagesRead ?? 0, 0),
+    0
+  )
   const lastReadDaysAgo = ordered[0] ? daysBetween(ordered[0].parsedDate, now) : null
 
   let momentum: SessionMomentum = 'new'
@@ -111,4 +135,29 @@ export function buildBookTimeline(
       nextActionKey
     }
   }
+}
+
+export function groupTimelineByDay(items: TimelineItem[]): TimelineDayGroup[] {
+  const groups = new Map<string, TimelineDayGroup>()
+
+  items.forEach((item) => {
+    const dayKey = toSessionDayKey(item.date)
+    const existing = groups.get(dayKey)
+
+    if (existing) {
+      existing.items.push(item)
+      existing.sessionCount += 1
+      existing.totalProgressDelta += Math.max(item.progressDelta, 0)
+      return
+    }
+
+    groups.set(dayKey, {
+      dayKey,
+      totalProgressDelta: Math.max(item.progressDelta, 0),
+      sessionCount: 1,
+      items: [item]
+    })
+  })
+
+  return [...groups.values()].sort((a, b) => b.dayKey.localeCompare(a.dayKey))
 }
