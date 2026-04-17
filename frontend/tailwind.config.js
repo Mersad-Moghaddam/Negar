@@ -45,6 +45,13 @@ export default {
         xl: '1.25rem',
         '2xl': '1.5rem'
       },
+      fontFamily: {
+        'brand-fa': ['var(--font-brand-fa)'],
+        'display-fa': ['var(--font-display-fa)'],
+        'ui-fa': ['var(--font-ui-fa)'],
+        'display-en': ['var(--font-display-en)'],
+        'ui-en': ['var(--font-ui-en)']
+      },
       boxShadow: {
         sm: '0 1px 2px hsl(var(--shadow) / 0.06), 0 8px 24px -18px hsl(var(--shadow) / 0.22)',
         md: '0 10px 30px -18px hsl(var(--shadow) / 0.28)',

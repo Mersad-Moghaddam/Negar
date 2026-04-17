@@ -1,8 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+  font-family: 'IranNastaliq';
+  src: url('@raha.group/persian-fonts/IranNastaliq.regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 
 @layer base {
   :root {
@@ -26,6 +32,11 @@
     --warning: 35 88% 50%;
     --destructive: 0 73% 52%;
     --shadow: 220 30% 20%;
+    --font-brand-fa: 'IranNastaliq', 'Noto Nastaliq Urdu', serif;
+    --font-display-fa: 'Aref Ruqaa', 'Vazirmatn', serif;
+    --font-ui-fa: 'Vazirmatn', system-ui, sans-serif;
+    --font-display-en: 'Newsreader', Georgia, serif;
+    --font-ui-en: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
   .dark {
@@ -67,7 +78,7 @@
 
   body {
     @apply overflow-x-hidden bg-background text-body text-foreground antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: var(--font-ui-en);
     text-rendering: optimizeLegibility;
   }
 
@@ -107,11 +118,31 @@
     @apply text-[11px] font-semibold uppercase tracking-[0.1em] text-mutedForeground;
   }
 
+  .font-brand-fa {
+    font-family: var(--font-brand-fa);
+  }
+
+  .font-display-fa {
+    font-family: var(--font-display-fa);
+  }
+
+  .font-ui-fa {
+    font-family: var(--font-ui-fa);
+  }
+
+  .font-display-en {
+    font-family: var(--font-display-en);
+  }
+
+  .font-ui-en {
+    font-family: var(--font-ui-en);
+  }
+
   .brand-wordmark-fa {
-    font-family: 'Noto Nastaliq Urdu', 'Vazirmatn', serif;
-    font-weight: 600;
+    font-family: var(--font-brand-fa);
+    font-weight: 400;
     letter-spacing: 0;
-    line-height: 1.05;
+    line-height: 1.2;
     white-space: nowrap;
     display: inline-block;
   }
@@ -133,7 +164,7 @@
 }
 
 html[lang='fa'] body {
-  font-family: 'Vazirmatn', system-ui, sans-serif;
+  font-family: var(--font-ui-fa);
   font-feature-settings:
     'ss01' on,
     'calt' on;

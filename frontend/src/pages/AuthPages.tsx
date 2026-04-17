@@ -40,7 +40,7 @@ export function Landing() {
     <div className={wrap}>
       <div className="mx-auto mb-4 flex max-w-6xl items-center justify-between gap-3 sm:mb-8">
         <div>
-          <p className={cn('text-2xl font-semibold tracking-tight text-foreground', locale === 'fa' && 'brand-wordmark-fa')}>
+          <p className={cn('text-2xl font-semibold tracking-tight text-foreground', locale === 'fa' ? 'brand-wordmark-fa' : 'font-display-en')}>
             {t('common.appName')}
           </p>
           <p className="text-xs text-mutedForeground">{t('landing.eyebrow')}</p>
@@ -55,7 +55,14 @@ export function Landing() {
         <Card className="grid gap-5 p-4 sm:gap-6 sm:p-6 lg:grid-cols-[1.1fr_0.9fr] lg:p-9">
           <div className="space-y-5">
             {productPreviewLabel ? <Badge className="w-fit">{productPreviewLabel}</Badge> : null}
-            <h1 className="max-w-2xl text-3xl font-semibold leading-tight text-foreground sm:text-hero">{t('landing.title')}</h1>
+            <h1
+              className={cn(
+                'max-w-2xl text-3xl font-semibold leading-tight text-foreground sm:text-hero',
+                locale === 'fa' ? 'font-display-fa' : 'font-display-en'
+              )}
+            >
+              {t('landing.title')}
+            </h1>
             <p className="max-w-xl text-sm text-mutedForeground sm:text-body">{t('landing.subtitle')}</p>
             <div className="grid gap-2 sm:flex sm:flex-wrap sm:gap-3">
               <Link to="/register">
@@ -108,7 +115,9 @@ export function Landing() {
 
         <Card className="flex flex-col items-start justify-between gap-4 p-4 sm:p-6 md:flex-row md:items-center">
           <div>
-            <h2 className="text-section-title">{t('landing.finalCtaTitle')}</h2>
+            <h2 className={cn('text-section-title', locale === 'fa' ? 'font-display-fa' : 'font-display-en')}>
+              {t('landing.finalCtaTitle')}
+            </h2>
             <p className="mt-1 text-sm text-mutedForeground">{t('landing.finalCtaSubtitle')}</p>
           </div>
           <Link to="/register">
