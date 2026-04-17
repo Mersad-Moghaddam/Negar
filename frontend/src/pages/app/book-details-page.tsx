@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { NotebookPen, Trash2 } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 
@@ -46,6 +46,7 @@ export function BookDetails({ id }: { id: string }) {
   const notesQuery = useBookNotesQuery(id)
   const addNote = useCreateBookNoteMutation(id)
   const deleteNote = useDeleteBookNoteMutation(id)
+  const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null)
 
   const form = useForm<ProgressValues>({ resolver: zodResolver(progressSchema), defaultValues: { currentPage: 0 } })
   const editForm = useForm<EditBookDetailsValues>({
@@ -149,19 +150,25 @@ export function BookDetails({ id }: { id: string }) {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-8 w-8 shrink-0 p-0 text-mutedForeground hover:text-destructive"
+                  className="h-9 shrink-0 gap-1.5 px-2.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
                   aria-label={t('books.deleteNote')}
                   disabled={deleteNote.isPending}
                   onClick={async () => {
                     try {
+                      setDeletingNoteId(n.id)
                       await deleteNote.mutateAsync(n.id)
                       toast.success(t('books.noteDeleted'))
                     } catch {
                       toast.error(t('books.noteDeleteError'))
+                    } finally {
+                      setDeletingNoteId(null)
                     }
                   }}
                 >
                   <Trash2 className="h-4 w-4" />
+                  <span className="text-xs font-medium">
+                    {deleteNote.isPending && deletingNoteId === n.id ? `${t('books.deleteNote')}...` : t('books.deleteNote')}
+                  </span>
                 </Button>
               </div>
               {n.highlight ? <p className="mt-1 text-mutedForeground">“{n.highlight}”</p> : null}
