@@ -133,7 +133,11 @@ func (s *Service) UpdateStatus(
 		b.FinishReflection = nil
 		b.FinishHighlight = nil
 		if nextToReadNote != nil {
-			b.NextToReadNote = nextToReadNote
+			if *nextToReadNote == "" {
+				b.NextToReadNote = nil
+			} else {
+				b.NextToReadNote = nextToReadNote
+			}
 		}
 		if nextToReadFocus != nil {
 			b.NextToReadFocus = *nextToReadFocus
@@ -154,11 +158,6 @@ func (s *Service) UpdateStatus(
 		b.FinishRating = nil
 		b.FinishReflection = nil
 		b.FinishHighlight = nil
-	}
-	if nextStatus != constants.BookStatusNextToRead {
-		if err := s.repo.ClearNextToReadFocus(ctx, userID, &b.ID); err != nil {
-			return nil, err
-		}
 	}
 	return b, s.repo.Update(ctx, b)
 }

@@ -133,6 +133,78 @@ func TestCreateRejectsInvalidPages(t *testing.T) {
 	}
 }
 
+func TestUpdateStatusDoesNotClearFocusedQueueOnUnrelatedBook(t *testing.T) {
+	t.Parallel()
+
+	userID := uuid.New()
+	queueID := uuid.New()
+	finishedID := uuid.New()
+	note := "Start this on the weekend"
+	repo := &fakeBookRepo{items: map[uuid.UUID]book.Book{
+		queueID: {
+			ID:              queueID,
+			UserID:          userID,
+			Title:           "Queued",
+			Author:          "Author",
+			TotalPages:      300,
+			Status:          constants.BookStatusNextToRead,
+			NextToReadFocus: true,
+			NextToReadNote:  &note,
+		},
+		finishedID: {
+			ID:         finishedID,
+			UserID:     userID,
+			Title:      "Done",
+			Author:     "Author",
+			TotalPages: 200,
+			Status:     constants.BookStatusFinished,
+		},
+	}}
+	svc := New(repo)
+
+	status := constants.BookStatusFinished
+	if _, err := svc.UpdateStatus(context.Background(), userID, finishedID, &status, nil, nil, nil, nil, nil); err != nil {
+		t.Fatalf("unexpected error updating unrelated book: %v", err)
+	}
+
+	queued, err := repo.GetByID(context.Background(), userID, queueID)
+	if err != nil {
+		t.Fatalf("expected queued book to exist: %v", err)
+	}
+	if !queued.NextToReadFocus {
+		t.Fatal("expected focused next-to-read book to stay focused")
+	}
+}
+
+func TestUpdateStatusCanClearNextToReadNote(t *testing.T) {
+	t.Parallel()
+
+	userID := uuid.New()
+	bookID := uuid.New()
+	note := "Read before vacation"
+	repo := &fakeBookRepo{items: map[uuid.UUID]book.Book{
+		bookID: {
+			ID:             bookID,
+			UserID:         userID,
+			Title:          "Queued",
+			Author:         "Author",
+			TotalPages:     250,
+			Status:         constants.BookStatusNextToRead,
+			NextToReadNote: &note,
+		},
+	}}
+	svc := New(repo)
+
+	clear := ""
+	updated, err := svc.UpdateStatus(context.Background(), userID, bookID, nil, nil, nil, nil, nil, &clear)
+	if err != nil {
+		t.Fatalf("unexpected error clearing note: %v", err)
+	}
+	if updated.NextToReadNote != nil {
+		t.Fatal("expected next-to-read note to be cleared")
+	}
+}
+
 func TestAnalyticsReadingPaceUsesCurrentMonthCompletions(t *testing.T) {
 	t.Parallel()
 

@@ -126,7 +126,7 @@ func (h *BookController) UpdateStatus(c *fiber.Ctx) error {
 	if req.NextToReadNote != nil {
 		trimmed := strings.TrimSpace(*req.NextToReadNote)
 		if trimmed == "" {
-			req.NextToReadNote = nil
+			req.NextToReadNote = &trimmed
 		} else {
 			req.NextToReadNote = &trimmed
 			validation.StringLength(trimmed, "nextToReadNote", 1, 240, errFields)
