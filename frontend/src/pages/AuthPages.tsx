@@ -31,7 +31,7 @@ const FieldError = ({ message }: { message?: string }) => {
 }
 
 export function Landing() {
-  const { t, tm } = useI18n()
+  const { t, tm, locale } = useI18n()
   const valueCards = tm<Array<{ title: string; text: string }>>('landing.valueCards') ?? []
   const testimonials = tm<Array<{ quote: string; author: string }>>('landing.testimonials') ?? []
   const productPreviewLabel = t('landing.productPreview')
@@ -40,7 +40,9 @@ export function Landing() {
     <div className={wrap}>
       <div className="mx-auto mb-4 flex max-w-6xl items-center justify-between gap-3 sm:mb-8">
         <div>
-          <p className="text-2xl font-semibold tracking-tight text-foreground">{t('common.appName')}</p>
+          <p className={cn('text-2xl font-semibold tracking-tight text-foreground', locale === 'fa' && 'brand-wordmark-fa')}>
+            {t('common.appName')}
+          </p>
           <p className="text-xs text-mutedForeground">{t('landing.eyebrow')}</p>
         </div>
         <div className="flex items-center gap-2">
