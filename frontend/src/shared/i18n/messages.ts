@@ -15,6 +15,7 @@ export const messages = {
     },
     nav: {
       dashboard: 'Dashboard',
+      coach: 'Reading coach',
       library: 'Library',
       reading: 'Reading',
       finished: 'Finished',
@@ -28,6 +29,21 @@ export const messages = {
       platformTitle: 'Negar platform',
       platformSubtitle: 'Focused reading operations for your personal workspace.',
       focusMode: 'Focus mode'
+    },
+    coach: {
+      title: 'Reading coach',
+      primaryActionTitle: 'One gentle next step',
+      primaryActionDescription:
+        'Keep this space focused: one clear action to protect your reading rhythm.',
+      primaryActionBody:
+        'Open your currently reading list and continue with a short focused session.',
+      openReading: 'Open reading list',
+      insightTitle: 'Coach insight',
+      insightDescription: 'A single high-signal insight based on your recent reading behavior.',
+      rhythmTitle: 'Weekly rhythm',
+      rhythmDescription: 'A quiet summary of your current momentum.',
+      weeklyPages: 'Pages this week: {current}/{target}',
+      weeklySessions: '{count} recent sessions'
     },
     landing: {
       eyebrow: 'Reading intelligence, without clutter',
@@ -191,6 +207,16 @@ export const messages = {
       },
       noActiveTitle: 'No active books yet',
       noActiveDescription: 'Move a title to Currently Reading to start seeing your progress here.',
+      coachHubTitle: 'Reading coach',
+      coachHubDesc: 'Insights, analytics, and goals now live in one calm place.',
+      coachHubBody:
+        'Open Reading Coach to review suggestions, study your reading stats, and adjust goals.',
+      openCoach: 'Open reading coach',
+      libraryHubTitle: 'Library',
+      libraryHubDesc: 'Keep your reading queue clean and easy to continue from one place.',
+      libraryHubBody:
+        'Open your library to organize titles, update statuses, and quickly decide what to read next.',
+      openLibrary: 'Open library',
       goLibrary: 'Go to library',
       needsAttention: 'Needs attention',
       tidyTitle: 'Everything is tidy',
@@ -221,7 +247,8 @@ export const messages = {
         },
         empty: {
           title: 'Your reading coach is ready',
-          message: 'Add one short reading session or update progress to unlock personalized insights.'
+          message:
+            'Add one short reading session or update progress to unlock personalized insights.'
         },
         titles: {
           inactive: 'Your momentum has cooled down',
@@ -235,15 +262,19 @@ export const messages = {
           steady: 'Your reading pace is steady'
         },
         messages: {
-          inactive: 'No progress was logged in recent days. A small session today can quickly restore momentum.',
+          inactive:
+            'No progress was logged in recent days. A small session today can quickly restore momentum.',
           nearCompletion: 'Finishing your closest book now will create a strong completion boost.',
           resumed: 'You returned this week after a quiet stretch. Keep the comeback going.',
-          consistency: 'You logged reading on multiple days this week, which is a strong consistency signal.',
+          consistency:
+            'You logged reading on multiple days this week, which is a strong consistency signal.',
           momentum: 'Your page count is higher than last week, showing positive momentum.',
           goalAhead: 'You have already reached your weekly page target. Excellent rhythm.',
           goalBehind: 'You still have time to recover this week with one or two focused sessions.',
-          focus: 'You are splitting attention across several active books with limited recent progress.',
-          steady: 'You are progressing. One focused update will make your next insight more specific.'
+          focus:
+            'You are splitting attention across several active books with limited recent progress.',
+          steady:
+            'You are progressing. One focused update will make your next insight more specific.'
         },
         recommendations: {
           logFirstSession: 'Log your first reading session this week.',
@@ -291,7 +322,8 @@ export const messages = {
       sortTitle: 'Title',
       allStatuses: 'All statuses',
       collectionSummary: '{visible} of {total} books in your library',
-      allStatusesHint: 'Library always includes all saved books. Status filters only narrow this view.',
+      allStatusesHint:
+        'Library always includes all saved books. Status filters only narrow this view.',
       noBooksTitle: 'No books found',
       noBooksDescription: 'Start by adding your first book above, or adjust your search filters.',
       clearFilters: 'Clear filters',
@@ -421,6 +453,7 @@ export const messages = {
     },
     nav: {
       dashboard: 'داشبورد',
+      coach: 'مربی مطالعه',
       library: 'کتابخانه',
       reading: 'در حال مطالعه',
       finished: 'تمام‌شده',
@@ -434,6 +467,20 @@ export const messages = {
       platformTitle: 'نگار',
       platformSubtitle: 'همراه مطالعه ات',
       focusMode: 'حالت تمرکز'
+    },
+    coach: {
+      title: 'مربی مطالعه',
+      primaryActionTitle: 'یک قدم بعدی ساده',
+      primaryActionDescription: 'این بخش خلوت می‌ماند: فقط یک اقدام روشن برای حفظ ریتم مطالعه.',
+      primaryActionBody:
+        'فهرست کتاب‌های در حال مطالعه‌ات را باز کن و یک جلسه کوتاه و متمرکز ادامه بده.',
+      openReading: 'باز کردن فهرست مطالعه',
+      insightTitle: 'بینش مربی',
+      insightDescription: 'یک بینش اصلی و کاربردی بر اساس رفتار اخیر مطالعه‌ات.',
+      rhythmTitle: 'ریتم هفتگی',
+      rhythmDescription: 'خلاصه‌ای آرام از شتاب فعلی مطالعه‌ات.',
+      weeklyPages: 'صفحات این هفته: {current}/{target}',
+      weeklySessions: '{count} جلسه اخیر'
     },
     landing: {
       eyebrow: 'همراه مطالعه ات',
@@ -583,6 +630,16 @@ export const messages = {
       },
       noActiveTitle: 'فعلاً کتاب فعالی نداری',
       noActiveDescription: 'یک کتاب را به «در حال مطالعه» ببر تا این بخش فعال شود.',
+      coachHubTitle: 'مربی مطالعه',
+      coachHubDesc: 'پیشنهادها، آمار و اهداف حالا در یک فضای خلوت کنار هم هستند.',
+      coachHubBody:
+        'مربی مطالعه را باز کن تا پیشنهادها را ببینی، آمار را مرور کنی و هدف‌ها را تنظیم کنی.',
+      openCoach: 'باز کردن مربی مطالعه',
+      libraryHubTitle: 'کتابخانه',
+      libraryHubDesc: 'فهرست مطالعه‌ات را مرتب و قابل‌ادامه در یک جای ساده نگه دار.',
+      libraryHubBody:
+        'کتابخانه را باز کن تا کتاب‌ها را مرتب کنی، وضعیت‌ها را تغییر بدهی و سریع تصمیم بگیری بعدی چیست.',
+      openLibrary: 'ورود به کتابخانه',
       goLibrary: 'برو به کتابخانه',
       needsAttention: 'نیازمند توجه',
       tidyTitle: 'همه‌چیز مرتب است',
@@ -591,7 +648,8 @@ export const messages = {
         consistency: 'چند هفته است که با ثبات مطالعه می‌کنی.',
         backlog: 'چند کتاب خوب در صف داری؛ این هفته یکی را شروع کن.',
         focus: 'چند کتاب را هم‌زمان جلو می‌بری؛ تمام‌کردن یکی می‌تواند شتابت را بهتر کند.',
-        shortBooks: 'معمولاً کتاب‌های کوتاه را سریع‌تر تمام می‌کنی؛ یک کتاب کوتاه برای برد سریع انتخاب کن.',
+        shortBooks:
+          'معمولاً کتاب‌های کوتاه را سریع‌تر تمام می‌کنی؛ یک کتاب کوتاه برای برد سریع انتخاب کن.',
         trackProgress: 'این هفته چند به‌روزرسانی پیشرفت ثبت کن تا بینش‌های شخصی‌تر فعال شوند.',
         goalHit: 'به هدفت رسیدی. ثباتت عالیه.'
       },
@@ -627,7 +685,8 @@ export const messages = {
           steady: 'ریتم مطالعه‌ات پایدار است'
         },
         messages: {
-          inactive: 'در چند روز اخیر پیشرفتی ثبت نشده است. یک جلسه کوتاه امروز می‌تواند ریتمت را برگرداند.',
+          inactive:
+            'در چند روز اخیر پیشرفتی ثبت نشده است. یک جلسه کوتاه امروز می‌تواند ریتمت را برگرداند.',
           nearCompletion: 'اگر همین حالا کتاب نزدیک به پایان را تمام کنی، شتاب خوبی می‌گیری.',
           resumed: 'این هفته بعد از یک وقفه برگشتی. همین روند بازگشت را حفظ کن.',
           consistency: 'این هفته در چند روز مختلف مطالعه ثبت کرده‌ای؛ نشانه خوبی از ثبات است.',
@@ -683,7 +742,8 @@ export const messages = {
       sortTitle: 'عنوان',
       allStatuses: 'همه وضعیت‌ها',
       collectionSummary: '{visible} از {total} کتاب در کتابخانه‌ات',
-      allStatusesHint: 'کتابخانه همیشه همهٔ کتاب‌ها را نگه می‌دارد؛ فیلتر وضعیت فقط نمایش را محدود می‌کند.',
+      allStatusesHint:
+        'کتابخانه همیشه همهٔ کتاب‌ها را نگه می‌دارد؛ فیلتر وضعیت فقط نمایش را محدود می‌کند.',
       noBooksTitle: 'کتابی پیدا نشد',
       noBooksDescription: 'یک کتاب اضافه کن یا فیلترها را عوض کن.',
       clearFilters: 'پاک‌کردن فیلترها',
