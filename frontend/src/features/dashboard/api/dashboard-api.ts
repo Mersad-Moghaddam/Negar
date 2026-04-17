@@ -1,6 +1,11 @@
 import api from '../../../api/client'
 import { extractData } from '../../../api/http'
-import { ReadingAnalytics, ReadingGoalsOverview, ReadingSession, ReminderSettings } from '../../../types'
+import { DashboardSummary, ReadingAnalytics, ReadingGoalsOverview, ReadingSession, ReminderSettings } from '../../../types'
+
+export async function fetchSummary() {
+  const response = await api.get<DashboardSummary>('/dashboard/summary')
+  return extractData(response)
+}
 
 export async function fetchAnalytics() {
   const response = await api.get<ReadingAnalytics>('/dashboard/analytics')

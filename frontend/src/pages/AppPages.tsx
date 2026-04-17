@@ -45,6 +45,7 @@ import { ReadingInsightsCard } from '../features/dashboard/components/reading-in
 import { buildReadingInsight } from '../features/dashboard/insights/insight-engine'
 import {
   useCreateSessionMutation,
+  useDashboardSummary,
   useDashboardAnalytics,
   useDashboardReminder,
   useGoalProgress,
@@ -130,6 +131,7 @@ function StatCard({ title, value, icon: Icon }: { title: string; value: string |
 
 export function Dashboard() {
   const { t, locale } = useI18n()
+  const summaryQuery = useDashboardSummary()
   const booksQuery = useBooksQuery()
   const analyticsQuery = useDashboardAnalytics()
   const reminderQuery = useDashboardReminder()
@@ -184,6 +186,9 @@ export function Dashboard() {
     books.forEach((book) => (base[book.status] += 1))
     return base
   }, [books])
+  const totalLibraryCount = summaryQuery.data?.counts.total ?? books.length
+  const currentlyReadingCount = summaryQuery.data?.counts.currentlyReading ?? counts.currentlyReading
+  const finishedCount = summaryQuery.data?.counts.finished ?? counts.finished
 
   const activeBook = books.find((book) => book.status === 'currentlyReading')
   const numberFormatter = useMemo(() => new Intl.NumberFormat(locale === 'fa' ? 'fa-IR' : 'en-US'), [locale])
@@ -192,9 +197,9 @@ export function Dashboard() {
     <div className="space-y-4 sm:space-y-5">
       <PageHeading title={t('dashboard.title')} />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard title={t('status.currentlyReading')} value={numberFormatter.format(counts.currentlyReading)} icon={BookPlus} />
-        <StatCard title={t('status.inLibrary')} value={numberFormatter.format(counts.inLibrary)} icon={LibraryBig} />
-        <StatCard title={t('status.finished')} value={numberFormatter.format(counts.finished)} icon={ListChecks} />
+        <StatCard title={t('status.currentlyReading')} value={numberFormatter.format(currentlyReadingCount)} icon={BookPlus} />
+        <StatCard title={t('dashboard.libraryTotal')} value={numberFormatter.format(totalLibraryCount)} icon={LibraryBig} />
+        <StatCard title={t('status.finished')} value={numberFormatter.format(finishedCount)} icon={ListChecks} />
         <StatCard title={t('dashboard.readingPace')} value={numberFormatter.format(analytics?.base.readingPacePerMonth ?? 0)} icon={LineChart} />
       </div>
 

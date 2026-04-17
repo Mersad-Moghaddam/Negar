@@ -11,6 +11,7 @@ export const queryKeys = {
     list: ['wishlist', 'list'] as const
   },
   dashboard: {
+    summary: ['dashboard', 'summary'] as const,
     analytics: ['dashboard', 'analytics'] as const,
     goals: ['dashboard', 'goals'] as const,
     sessions: ['dashboard', 'sessions'] as const,
