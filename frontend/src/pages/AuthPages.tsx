@@ -21,7 +21,7 @@ import { useI18n } from '../shared/i18n/i18n-provider'
 import { useToast } from '../shared/toast/toast-provider'
 import { LanguageToggle } from '../widgets/language-toggle/language-toggle'
 
-const wrap = 'app-shell min-h-screen px-3 py-5 sm:px-4 sm:py-7 md:px-8 md:py-10'
+const wrap = 'app-shell min-h-dvh w-full px-3 py-4 sm:px-4 sm:py-7 md:px-8 md:py-10'
 const formCard = 'mx-auto w-full max-w-md space-y-5 p-4 sm:p-6 md:p-7'
 
 const FieldError = ({ message }: { message?: string }) => {
@@ -31,15 +31,18 @@ const FieldError = ({ message }: { message?: string }) => {
 }
 
 export function Landing() {
-  const { t, tm } = useI18n()
+  const { t, tm, locale } = useI18n()
   const valueCards = tm<Array<{ title: string; text: string }>>('landing.valueCards') ?? []
   const testimonials = tm<Array<{ quote: string; author: string }>>('landing.testimonials') ?? []
+  const productPreviewLabel = t('landing.productPreview')
 
   return (
     <div className={wrap}>
       <div className="mx-auto mb-4 flex max-w-6xl items-center justify-between gap-3 sm:mb-8">
         <div>
-          <p className="text-2xl font-semibold tracking-tight text-foreground">Libro</p>
+          <p className={cn('text-2xl font-semibold tracking-tight text-foreground', locale === 'fa' && 'brand-wordmark-fa')}>
+            {t('common.appName')}
+          </p>
           <p className="text-xs text-mutedForeground">{t('landing.eyebrow')}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -51,7 +54,7 @@ export function Landing() {
       <section className="mx-auto max-w-6xl space-y-4 sm:space-y-6">
         <Card className="grid gap-5 p-4 sm:gap-6 sm:p-6 lg:grid-cols-[1.1fr_0.9fr] lg:p-9">
           <div className="space-y-5">
-            <Badge className="w-fit">{t('landing.productPreview')}</Badge>
+            {productPreviewLabel ? <Badge className="w-fit">{productPreviewLabel}</Badge> : null}
             <h1 className="max-w-2xl text-3xl font-semibold leading-tight text-foreground sm:text-hero">{t('landing.title')}</h1>
             <p className="max-w-xl text-sm text-mutedForeground sm:text-body">{t('landing.subtitle')}</p>
             <div className="grid gap-2 sm:flex sm:flex-wrap sm:gap-3">
@@ -166,7 +169,7 @@ export function Register() {
   })
 
   return (
-    <div className={cn(wrap, 'flex flex-col items-center justify-start sm:justify-center')}>
+    <div className={cn(wrap, 'flex w-full flex-col items-center justify-center gap-3 sm:gap-4')}>
       <AuthHeader />
       <AuthFrame title={t('auth.createAccount')} subtitle={t('auth.registerSubtitle')}>
         <form onSubmit={onSubmit} className="space-y-3">
@@ -227,7 +230,7 @@ export function Login() {
   })
 
   return (
-    <div className={cn(wrap, 'flex flex-col items-center justify-start sm:justify-center')}>
+    <div className={cn(wrap, 'flex w-full flex-col items-center justify-center gap-3 sm:gap-4')}>
       <AuthHeader />
       <AuthFrame title={t('auth.welcomeBack')} subtitle={t('auth.loginSubtitle')}>
         <form onSubmit={onSubmit} className="space-y-3">

@@ -10,7 +10,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false)
   const mobileHeaderVars = {
     '--mobile-header-vpad': 'max(0.6rem, env(safe-area-inset-top))',
-    '--mobile-header-offset': 'calc(2.5rem + (var(--mobile-header-vpad) * 2))'
+    '--mobile-header-offset': 'calc(2.5rem + (var(--mobile-header-vpad) * 2) + 0.25rem)'
   } as CSSProperties
 
   useEffect(() => {
