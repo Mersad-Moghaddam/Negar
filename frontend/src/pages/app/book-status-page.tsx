@@ -18,7 +18,8 @@ function BookListByStatus({ status, title }: { status: BookStatus; title: string
   const query = useBooksQuery({ status })
   const updateStatus = useUpdateBookStatusMutation()
   const updateProgress = useUpdateBookProgressMutation()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const numberFormatter = new Intl.NumberFormat(locale === 'fa' ? 'fa-IR' : 'en-US')
 
   return (
     <div className="space-y-4 sm:space-y-5">
@@ -33,13 +34,56 @@ function BookListByStatus({ status, title }: { status: BookStatus; title: string
         <div className="grid gap-3 md:grid-cols-2">
           {query.data?.map((book) => (
             <SectionCard key={book.id}>
-              <div className="flex flex-wrap items-start justify-between gap-3"><div className="flex min-w-0 items-start gap-3"><BookCover title={book.title} coverUrl={book.coverUrl} /><div className="min-w-0"><p className="truncate font-semibold">{book.title}</p><p className="truncate text-small text-mutedForeground">{book.author}</p></div></div><p className="text-sm text-mutedForeground">{book.currentPage}/{book.totalPages}</p></div>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start gap-3">
+                  <BookCover title={book.title} coverUrl={book.coverUrl} />
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">{book.title}</p>
+                    <p className="truncate text-small text-mutedForeground">{book.author}</p>
+                  </div>
+                </div>
+                <p className="text-sm text-mutedForeground">
+                  {numberFormatter.format(book.currentPage)}/
+                  {numberFormatter.format(book.totalPages)}
+                </p>
+              </div>
               <Progress value={book.progressPercentage} />
               <div className="flex flex-wrap gap-2">
-                {status === 'currentlyReading' ? <Button className="w-full sm:w-auto" onClick={() => updateStatus.mutate({ id: book.id, status: 'finished' })}>{t('books.markFinished')}</Button> : null}
-                {status === 'nextToRead' ? <Button className="w-full sm:w-auto" onClick={() => updateStatus.mutate({ id: book.id, status: 'currentlyReading' })}>{t('books.startReading')}</Button> : null}
-                {status === 'currentlyReading' ? <Button className="w-full sm:w-auto" variant="secondary" onClick={() => updateProgress.mutate({ id: book.id, currentPage: Math.min(book.currentPage + 10, book.totalPages) })}>{t('books.updateProgress')}</Button> : null}
-                <Link className="w-full sm:w-auto" to={`/books/${book.id}`}><Button className="w-full" variant="ghost">{t('common.details')}</Button></Link>
+                {status === 'currentlyReading' ? (
+                  <Button
+                    className="w-full sm:w-auto"
+                    onClick={() => updateStatus.mutate({ id: book.id, status: 'finished' })}
+                  >
+                    {t('books.markFinished')}
+                  </Button>
+                ) : null}
+                {status === 'nextToRead' ? (
+                  <Button
+                    className="w-full sm:w-auto"
+                    onClick={() => updateStatus.mutate({ id: book.id, status: 'currentlyReading' })}
+                  >
+                    {t('books.startReading')}
+                  </Button>
+                ) : null}
+                {status === 'currentlyReading' ? (
+                  <Button
+                    className="w-full sm:w-auto"
+                    variant="secondary"
+                    onClick={() =>
+                      updateProgress.mutate({
+                        id: book.id,
+                        currentPage: Math.min(book.currentPage + 10, book.totalPages)
+                      })
+                    }
+                  >
+                    {t('books.updateProgress')}
+                  </Button>
+                ) : null}
+                <Link className="w-full sm:w-auto" to={`/books/${book.id}`}>
+                  <Button className="w-full" variant="ghost">
+                    {t('common.details')}
+                  </Button>
+                </Link>
               </div>
             </SectionCard>
           ))}
