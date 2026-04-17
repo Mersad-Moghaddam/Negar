@@ -91,9 +91,24 @@ export function BookDetails({ id }: { id: string }) {
   }, [query.data, editForm, form])
 
   const book = query.data
-  const sessionsForBook = sessionsQuery.data ?? []
-  const timeline = buildBookTimeline(sessionsForBook, book?.currentPage ?? 0, book?.totalPages ?? 0)
-  const timelineDayGroups = groupTimelineByDay(timeline.items)
+  const sessionsForBook = useMemo(() => sessionsQuery.data ?? [], [sessionsQuery.data])
+  const timeline = useMemo(
+    () => buildBookTimeline(sessionsForBook, book?.currentPage ?? 0, book?.totalPages ?? 0),
+    [sessionsForBook, book?.currentPage, book?.totalPages]
+  )
+  const timelineDayGroups = useMemo(() => groupTimelineByDay(timeline.items), [timeline.items])
+  const timelineDayGroupKey = useMemo(
+    () => timelineDayGroups.map((group) => group.dayKey).join('|'),
+    [timelineDayGroups]
+  )
+  const defaultExpandedTimelineDays = useMemo(
+    () => timelineDayGroups.slice(0, TIMELINE_DEFAULT_EXPANDED_DAYS).map((group) => group.dayKey),
+    [timelineDayGroups]
+  )
+  const defaultExpandedTimelineDayKey = useMemo(
+    () => defaultExpandedTimelineDays.join('|'),
+    [defaultExpandedTimelineDays]
+  )
   const notes = notesQuery.data ?? []
   const notesWithHighlights = notes.filter((note) => Boolean(note.highlight?.trim()))
   const notesWithoutHighlights = notes.filter((note) => !note.highlight?.trim())
@@ -119,11 +134,13 @@ export function BookDetails({ id }: { id: string }) {
   })
 
   useEffect(() => {
-    setVisibleTimelineDays(TIMELINE_VISIBLE_STEP)
-    setExpandedTimelineDays(
-      new Set(timelineDayGroups.slice(0, TIMELINE_DEFAULT_EXPANDED_DAYS).map((g) => g.dayKey))
-    )
-  }, [timelineDayGroups])
+    setVisibleTimelineDays((current) => (current === TIMELINE_VISIBLE_STEP ? current : TIMELINE_VISIBLE_STEP))
+    setExpandedTimelineDays((current) => {
+      const currentKey = [...current].join('|')
+      if (currentKey === defaultExpandedTimelineDayKey) return current
+      return new Set(defaultExpandedTimelineDays)
+    })
+  }, [timelineDayGroupKey, defaultExpandedTimelineDayKey, defaultExpandedTimelineDays])
 
   const formatDate = (value: string | null) => {
     if (!value) return '—'
