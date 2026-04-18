@@ -19,6 +19,11 @@ import { useI18n } from '../../shared/i18n/i18n-provider'
 
 import { PageHeading } from './shared/page-primitives'
 
+const libraryActionRecommendations = new Set([
+  'dashboard.insights.recommendations.focusOneBook',
+  'dashboard.insights.recommendations.logFirstSession'
+])
+
 export function Coach() {
   const { t, locale } = useI18n()
   const booksQuery = useBooksQuery()
@@ -66,7 +71,7 @@ export function Coach() {
   const recommendationKey = readingInsight.recommendationKey
   const recommendationText = recommendationKey ? t(recommendationKey) : t('coach.primaryActionBody')
   const primaryActionRoute =
-    recommendationKey === 'dashboard.insights.recommendations.focusOneBook' ? '/library' : '/reading'
+    recommendationKey && libraryActionRecommendations.has(recommendationKey) ? '/library' : '/reading'
   const primaryActionLabel = primaryActionRoute === '/library' ? t('dashboard.openLibrary') : t('coach.openReading')
   const primaryActionBody = isCoachDataLoading || isCoachDataError ? t('coach.primaryActionBody') : recommendationText
 
