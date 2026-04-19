@@ -82,6 +82,7 @@ Schema is managed under `migrations/`:
 
 - `GET /health`
 - `GET /ready`
+- `GET /metrics` (operational metrics for scraping)
 
 ## Local run
 

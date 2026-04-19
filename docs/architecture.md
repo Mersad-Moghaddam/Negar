@@ -25,4 +25,10 @@
 ## Operational behavior
 - Readiness checks MySQL and Redis connectivity with timeout.
 - Request IDs and structured request logs are applied globally.
+- `/metrics` exposes operational counters/histograms and dependency readiness gauges.
 - Startup fails fast on missing/invalid env.
+
+## Product analytics behavior
+- Product analytics is frontend-driven and centralized in `src/shared/analytics`.
+- Event taxonomy is documented in `docs/analytics-event-model.md`.
+- Product analytics payloads exclude sensitive data and are intentionally separate from backend operational logs/metrics.

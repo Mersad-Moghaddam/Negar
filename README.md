@@ -117,4 +117,7 @@ npm run format
 ## Additional docs
 - Architecture: `docs/architecture.md`
 - Release/deployment: `docs/release-and-deployment.md`
+- Observability baseline: `docs/observability.md`
+- Analytics taxonomy: `docs/analytics-event-model.md`
+- Runbooks: `docs/runbooks.md`
 - Libro -> Negar compatibility: `docs/compatibility.md`

@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
+import { analyticsEvents } from '../../../shared/analytics/events'
+import { analytics } from '../../../shared/analytics/tracker'
 import { queryKeys } from '../../../shared/query/query-keys'
 import { BookStatus } from '../../../types'
 import {
@@ -72,6 +74,7 @@ export function useCreateBookMutation() {
   return useMutation({
     mutationFn: createBook,
     onSuccess: () => {
+      analytics.track(analyticsEvents.bookCreated)
       void invalidateReadingDerivedQueries(queryClient)
     }
   })
@@ -94,6 +97,7 @@ export function useUpdateBookMutation() {
       }
     }) => updateBook(id, payload),
     onSuccess: (_data, variables) => {
+      analytics.track(analyticsEvents.bookUpdated, { book_id: variables.id, status: variables.payload.status })
       void invalidateReadingDerivedQueries(queryClient, variables.id)
     }
   })
@@ -121,6 +125,7 @@ export function useDeleteBookMutation() {
       })
     },
     onSettled: () => {
+      analytics.track(analyticsEvents.bookDeleted)
       void invalidateReadingDerivedQueries(queryClient)
     }
   })
@@ -148,6 +153,7 @@ export function useUpdateBookStatusMutation() {
       nextToReadNote?: string
     }) => updateBookStatus(id, { status, finishRating, finishReflection, finishHighlight, nextToReadFocus, nextToReadNote }),
     onSuccess: (_data, variables) => {
+      analytics.track(analyticsEvents.bookUpdated, { book_id: variables.id, status: variables.status ?? 'unchanged' })
       void invalidateReadingDerivedQueries(queryClient, variables.id)
     }
   })
@@ -160,6 +166,7 @@ export function useUpdateBookProgressMutation() {
     mutationFn: ({ id, currentPage }: { id: string; currentPage: number }) =>
       updateBookProgress(id, currentPage),
     onSuccess: (_data, variables) => {
+      analytics.track(analyticsEvents.progressUpdated, { book_id: variables.id })
       void invalidateReadingDerivedQueries(queryClient, variables.id)
     }
   })

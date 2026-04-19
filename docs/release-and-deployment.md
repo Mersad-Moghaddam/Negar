@@ -17,4 +17,5 @@
 ## Post-deploy validation
 - `GET /health` should return 200.
 - `GET /ready` should return 200 only when MySQL and Redis are reachable.
+- `GET /metrics` should return Prometheus-formatted operational metrics.
 - Perform an auth login + refresh smoke test.

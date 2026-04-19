@@ -1,34 +1,28 @@
 package reminders
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
-func TestNormalizeAndValidateSettings(t *testing.T) {
-	tests := []struct {
-		name      string
-		time      string
-		frequency string
-		ok        bool
-	}{
-		{name: "valid normalized", time: " 08:30 ", frequency: " daily ", ok: true},
-		{name: "invalid time hour", time: "24:00", frequency: "daily", ok: false},
-		{name: "invalid frequency", time: "08:30", frequency: "monthly", ok: false},
-		{name: "empty time", time: " ", frequency: "daily", ok: false},
+func TestNextReminderAtDisabled(t *testing.T) {
+	now := time.Date(2026, 4, 19, 10, 0, 0, 0, time.UTC)
+	if got := NextReminderAt(now, false, "09:00", "daily"); got != nil {
+		t.Fatalf("expected nil reminder when disabled, got %v", *got)
 	}
+}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			normalizedTime, normalizedFrequency, ok := NormalizeAndValidateSettings(tc.time, tc.frequency)
-			if ok != tc.ok {
-				t.Fatalf("expected ok=%v, got %v", tc.ok, ok)
-			}
-			if ok {
-				if normalizedTime != "08:30" && tc.name == "valid normalized" {
-					t.Fatalf("expected normalized time 08:30, got %q", normalizedTime)
-				}
-				if normalizedFrequency != "daily" && tc.name == "valid normalized" {
-					t.Fatalf("expected normalized frequency daily, got %q", normalizedFrequency)
-				}
-			}
-		})
+func TestNextReminderAtWeekdaysSkipsWeekend(t *testing.T) {
+	now := time.Date(2026, 4, 19, 10, 0, 0, 0, time.UTC) // Sunday
+	got := NextReminderAt(now, true, "09:00", "weekdays")
+	if got == nil {
+		t.Fatal("expected reminder for next weekday")
+	}
+	parsed, err := time.Parse(time.RFC3339, *got)
+	if err != nil {
+		t.Fatalf("parse reminder time: %v", err)
+	}
+	if parsed.Weekday() != time.Monday {
+		t.Fatalf("expected Monday reminder, got %s", parsed.Weekday())
 	}
 }

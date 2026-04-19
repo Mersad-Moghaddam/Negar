@@ -15,6 +15,7 @@ import (
 	"negar-backend/controllers/userController"
 	"negar-backend/controllers/wishlistController"
 	"negar-backend/middleware/auth"
+	"negar-backend/middleware/observability"
 	"negar-backend/middleware/requestctx"
 	"negar-backend/statics/configs"
 )
@@ -43,6 +44,7 @@ func NewServer(cfg *configs.Config, deps mainController.ControllerDeps, logger *
 	})
 	app.Use(requestid.New(requestid.Config{Header: requestctx.RequestIDHeader}))
 	app.Use(requestctx.RequestLogger(logger))
+	app.Use(observability.MetricsMiddleware())
 	app.Use(recover.New(recover.Config{
 		EnableStackTrace: true,
 		StackTraceHandler: func(c *fiber.Ctx, e interface{}) {
@@ -60,6 +62,7 @@ func NewServer(cfg *configs.Config, deps mainController.ControllerDeps, logger *
 
 	app.Get("/health", mainCtrl.Health)
 	app.Get("/ready", mainCtrl.Ready)
+	app.Get("/metrics", mainCtrl.Metrics)
 
 	api := app.Group("/api/v1")
 	authRoutes := api.Group("/auth")

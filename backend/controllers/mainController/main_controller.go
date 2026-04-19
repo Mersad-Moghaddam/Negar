@@ -4,13 +4,17 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
+	"negar-backend/middleware/requestctx"
 	"negar-backend/pkg/apiresponse"
 	"negar-backend/pkg/bookview"
+	"negar-backend/pkg/observability"
 	"negar-backend/pkg/reminders"
 	"negar-backend/pkg/requestutil"
 	"negar-backend/services/apiErrCode"
 	"negar-backend/services/authService"
 	"negar-backend/services/bookService"
+	"negar-backend/services/mainlogic"
 	"negar-backend/services/readingService"
 	"negar-backend/statics/constants"
 )
@@ -35,10 +39,16 @@ func (c *MainController) Health(ctx *fiber.Ctx) error {
 func (c *MainController) Ready(ctx *fiber.Ctx) error {
 	if c.service.readiness != nil {
 		if err := c.service.readiness.Check(ctx.Context()); err != nil {
+			requestctx.LoggerFromCtx(ctx, zap.NewNop()).Warn("readiness_check_failed", zap.Error(err))
 			return apiresponse.Error(ctx, fiber.StatusServiceUnavailable, "not_ready", "Service not ready.", nil)
 		}
 	}
 	return apiresponse.OK(ctx, fiber.Map{"status": constants.HealthStatusOK}, nil)
+}
+
+func (c *MainController) Metrics(ctx *fiber.Ctx) error {
+	ctx.Set("Content-Type", "text/plain; version=0.0.4")
+	return ctx.SendString(observability.MetricsText())
 }
 
 func (c *MainController) DashboardSummary(ctx *fiber.Ctx) error {
@@ -80,30 +90,8 @@ func (c *MainController) DashboardAnalytics(ctx *fiber.Ctx) error {
 	if err != nil {
 		return apiErrCode.RespondError(ctx, err)
 	}
-	trend := make([]fiber.Map, 0, len(sessions))
-	activeDays := map[string]struct{}{}
-	totalPages := 0
-	for _, s := range sessions {
-		day := s.Date.Format("2006-01-02")
-		activeDays[day] = struct{}{}
-		totalPages += s.PagesRead
-		trend = append(trend, fiber.Map{"date": day, "pages": s.PagesRead, "duration": s.Duration})
-	}
-	consistency := 0
-	if len(sessions) > 0 {
-		consistency = int(float64(len(activeDays)) / 30.0 * 100)
-		if consistency > 100 {
-			consistency = 100
-		}
-	}
-	backlogHealth := "balanced"
-	backlogCount := analytics.StatusDistribution[constants.BookStatusInLibrary] + analytics.StatusDistribution[constants.BookStatusNextToRead]
-	if backlogCount >= 10 {
-		backlogHealth = "heavy"
-	} else if backlogCount <= 2 {
-		backlogHealth = "light"
-	}
-	return apiresponse.OK(ctx, fiber.Map{"base": analytics, "trend": trend, "consistencyScore": consistency, "backlogHealth": backlogHealth, "sessionPages": totalPages}, nil)
+	view := mainlogic.BuildDashboardAnalyticsView(analytics.StatusDistribution, sessions)
+	return apiresponse.OK(ctx, fiber.Map{"base": analytics, "trend": view.Trend, "consistencyScore": view.ConsistencyScore, "backlogHealth": view.BacklogHealth, "sessionPages": view.SessionPages}, nil)
 }
 
 func (c *MainController) DashboardInsights(ctx *fiber.Ctx) error {
