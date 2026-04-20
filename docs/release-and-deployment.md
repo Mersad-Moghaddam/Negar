@@ -11,7 +11,7 @@
 - Frontend: `frontend/Dockerfile` builds static assets served by nginx.
 
 ## CI gates
-- Backend workflow: gofmt/golangci-lint/go test.
+- Backend workflow: golangci-lint, `go build ./...`, `go test ./...`.
 - Frontend workflow: npm ci, lint, tests, build.
 
 ## Post-deploy validation

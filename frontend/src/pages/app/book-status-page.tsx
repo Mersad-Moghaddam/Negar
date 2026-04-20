@@ -4,12 +4,13 @@ import { Link } from 'react-router-dom'
 import { Progress } from '../../components/UI'
 import { Button } from '../../components/ui/button'
 import { SectionCard } from '../../components/ui/card'
-import { Textarea } from '../../components/ui/textarea'
 import {
   useBooksQuery,
   useUpdateBookProgressMutation,
   useUpdateBookStatusMutation
 } from '../../features/books/queries/use-books'
+import { FinishBookPanel } from '../../features/books/status/finish-book-panel'
+import { NextToReadNotePanel } from '../../features/books/status/next-to-read-note-panel'
 import { QueryState } from '../../shared/components/query-state'
 import { useI18n } from '../../shared/i18n/i18n-provider'
 import { BookStatus } from '../../types'
@@ -135,140 +136,69 @@ function BookListByStatus({ status, title }: { status: BookStatus; title: string
                 </Link>
               </div>
               {status === 'nextToRead' && activeQueueNoteId === book.id ? (
-                <div className="space-y-2 rounded-xl border border-border bg-surface p-3">
-                  <label className="block space-y-1">
-                    <span className="text-xs text-mutedForeground">{t('books.whyNextLabel')}</span>
-                    <Textarea
-                      rows={2}
-                      maxLength={240}
-                      placeholder={t('books.whyNextPlaceholder')}
-                      value={getQueueNote(book.id, book.nextToReadNote)}
-                      onChange={(event) => setQueueNotes((current) => ({ ...current, [book.id]: event.target.value }))}
-                    />
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        updateStatus
-                          .mutateAsync({ id: book.id, nextToReadNote: getQueueNote(book.id, book.nextToReadNote).trim() })
-                          .then(() => setActiveQueueNoteId(null))
-                      }
-                    >
-                      {t('common.save')}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() =>
-                        updateStatus
-                          .mutateAsync({ id: book.id, nextToReadNote: '' })
-                          .then(() => {
-                            setQueueNotes((current) => ({ ...current, [book.id]: '' }))
-                            setActiveQueueNoteId(null)
-                          })
-                      }
-                    >
-                      {t('common.clear')}
-                    </Button>
-                  </div>
-                </div>
+                <NextToReadNotePanel
+                  value={getQueueNote(book.id, book.nextToReadNote)}
+                  onChange={(value) =>
+                    setQueueNotes((current) => ({ ...current, [book.id]: value }))
+                  }
+                  onSave={() =>
+                    updateStatus
+                      .mutateAsync({
+                        id: book.id,
+                        nextToReadNote: getQueueNote(book.id, book.nextToReadNote).trim()
+                      })
+                      .then(() => setActiveQueueNoteId(null))
+                  }
+                  onClear={() =>
+                    updateStatus.mutateAsync({ id: book.id, nextToReadNote: '' }).then(() => {
+                      setQueueNotes((current) => ({ ...current, [book.id]: '' }))
+                      setActiveQueueNoteId(null)
+                    })
+                  }
+                />
               ) : null}
               {status === 'currentlyReading' && activeFinishId === book.id ? (
-                <div className="space-y-3 rounded-xl border border-border bg-surface p-3">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">{t('books.finishFlowTitle')}</p>
-                    <p className="text-xs text-mutedForeground">{t('books.finishFlowDescription')}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-xs text-mutedForeground">{t('books.finishRatingLabel')}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {[1, 2, 3, 4, 5].map((rating) => {
-                        const selected = getDraft(book.id).rating === rating
-                        return (
-                          <Button
-                            key={rating}
-                            size="sm"
-                            type="button"
-                            variant={selected ? 'primary' : 'secondary'}
-                            className="min-w-10"
-                            onClick={() =>
-                              setFinishDrafts((current) => ({
-                                ...current,
-                                [book.id]: { ...getDraft(book.id), rating }
-                              }))
-                            }
-                          >
-                            {numberFormatter.format(rating)}
-                          </Button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                  <label className="block space-y-1">
-                    <span className="text-xs text-mutedForeground">{t('books.finishReflectionLabel')}</span>
-                    <Textarea
-                      rows={2}
-                      maxLength={1000}
-                      placeholder={t('books.finishReflectionPlaceholder')}
-                      value={getDraft(book.id).reflection}
-                      onChange={(event) =>
-                        setFinishDrafts((current) => ({
-                          ...current,
-                          [book.id]: { ...getDraft(book.id), reflection: event.target.value }
-                        }))
-                      }
-                    />
-                  </label>
-                  <label className="block space-y-1">
-                    <span className="text-xs text-mutedForeground">{t('books.finishHighlightLabel')}</span>
-                    <Textarea
-                      rows={2}
-                      maxLength={600}
-                      placeholder={t('books.finishHighlightPlaceholder')}
-                      value={getDraft(book.id).highlight}
-                      onChange={(event) =>
-                        setFinishDrafts((current) => ({
-                          ...current,
-                          [book.id]: { ...getDraft(book.id), highlight: event.target.value }
-                        }))
-                      }
-                    />
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      disabled={isSubmittingFinish(book.id)}
-                      onClick={() =>
-                        updateStatus
-                          .mutateAsync({
-                            id: book.id,
-                            status: 'finished',
-                            finishRating: getDraft(book.id).rating,
-                            finishReflection: getDraft(book.id).reflection.trim() || undefined,
-                            finishHighlight: getDraft(book.id).highlight.trim() || undefined
-                          })
-                          .then(() => {
-                            setActiveFinishId(null)
-                          })
-                      }
-                    >
-                      {t('books.finishNowAction')}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      disabled={isSubmittingFinish(book.id)}
-                      onClick={() =>
-                        updateStatus
-                          .mutateAsync({ id: book.id, status: 'finished' })
-                          .then(() => setActiveFinishId(null))
-                      }
-                    >
-                      {t('books.finishQuickAction')}
-                    </Button>
-                  </div>
-                </div>
+                <FinishBookPanel
+                  draft={getDraft(book.id)}
+                  numberFormatter={numberFormatter}
+                  isSubmitting={isSubmittingFinish(book.id)}
+                  onSelectRating={(rating) =>
+                    setFinishDrafts((current) => ({
+                      ...current,
+                      [book.id]: { ...getDraft(book.id), rating }
+                    }))
+                  }
+                  onChangeReflection={(value) =>
+                    setFinishDrafts((current) => ({
+                      ...current,
+                      [book.id]: { ...getDraft(book.id), reflection: value }
+                    }))
+                  }
+                  onChangeHighlight={(value) =>
+                    setFinishDrafts((current) => ({
+                      ...current,
+                      [book.id]: { ...getDraft(book.id), highlight: value }
+                    }))
+                  }
+                  onFinishDetailed={() =>
+                    updateStatus
+                      .mutateAsync({
+                        id: book.id,
+                        status: 'finished',
+                        finishRating: getDraft(book.id).rating,
+                        finishReflection: getDraft(book.id).reflection.trim() || undefined,
+                        finishHighlight: getDraft(book.id).highlight.trim() || undefined
+                      })
+                      .then(() => {
+                        setActiveFinishId(null)
+                      })
+                  }
+                  onFinishQuick={() =>
+                    updateStatus
+                      .mutateAsync({ id: book.id, status: 'finished' })
+                      .then(() => setActiveFinishId(null))
+                  }
+                />
               ) : null}
             </SectionCard>
           ))}

@@ -2,13 +2,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { analyticsEvents } from '../../../shared/analytics/events'
 import { analytics } from '../../../shared/analytics/tracker'
+import { invalidateReadingOverviewQueries } from '../../../shared/query/invalidation'
 import { queryKeys } from '../../../shared/query/query-keys'
 import { BookStatus } from '../../../types'
 import {
   createBook,
   createBookNote,
   deleteBook,
-  deleteBookNote,
   fetchBook,
   fetchBookNotes,
   fetchBooks,
@@ -16,18 +16,6 @@ import {
   updateBookProgress,
   updateBookStatus
 } from '../api/books-api'
-
-async function invalidateReadingDerivedQueries(queryClient: ReturnType<typeof useQueryClient>, bookId?: string) {
-  await Promise.all([
-    queryClient.invalidateQueries({ queryKey: queryKeys.books.all }),
-    queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.summary }),
-    queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.analytics }),
-    queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.goals }),
-    queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.sessions }),
-    queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.insights }),
-    bookId ? queryClient.invalidateQueries({ queryKey: queryKeys.books.detail(bookId) }) : Promise.resolve()
-  ])
-}
 
 export function useBooksQuery(params?: { search?: string; status?: string; genre?: string; sortBy?: string; order?: 'asc' | 'desc' }) {
   return useQuery({
@@ -58,16 +46,6 @@ export function useCreateBookNoteMutation(id: string) {
   })
 }
 
-export function useDeleteBookNoteMutation(id: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (noteId: string) => deleteBookNote(id, noteId),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: [...queryKeys.books.detail(id), 'notes'] })
-    }
-  })
-}
-
 export function useCreateBookMutation() {
   const queryClient = useQueryClient()
 
@@ -75,7 +53,7 @@ export function useCreateBookMutation() {
     mutationFn: createBook,
     onSuccess: () => {
       analytics.track(analyticsEvents.bookCreated)
-      void invalidateReadingDerivedQueries(queryClient)
+      void invalidateReadingOverviewQueries(queryClient)
     }
   })
 }
@@ -98,7 +76,7 @@ export function useUpdateBookMutation() {
     }) => updateBook(id, payload),
     onSuccess: (_data, variables) => {
       analytics.track(analyticsEvents.bookUpdated, { book_id: variables.id, status: variables.payload.status })
-      void invalidateReadingDerivedQueries(queryClient, variables.id)
+      void invalidateReadingOverviewQueries(queryClient, variables.id)
     }
   })
 }
@@ -126,7 +104,7 @@ export function useDeleteBookMutation() {
     },
     onSettled: () => {
       analytics.track(analyticsEvents.bookDeleted)
-      void invalidateReadingDerivedQueries(queryClient)
+      void invalidateReadingOverviewQueries(queryClient)
     }
   })
 }
@@ -154,7 +132,7 @@ export function useUpdateBookStatusMutation() {
     }) => updateBookStatus(id, { status, finishRating, finishReflection, finishHighlight, nextToReadFocus, nextToReadNote }),
     onSuccess: (_data, variables) => {
       analytics.track(analyticsEvents.bookUpdated, { book_id: variables.id, status: variables.status ?? 'unchanged' })
-      void invalidateReadingDerivedQueries(queryClient, variables.id)
+      void invalidateReadingOverviewQueries(queryClient, variables.id)
     }
   })
 }
@@ -167,7 +145,7 @@ export function useUpdateBookProgressMutation() {
       updateBookProgress(id, currentPage),
     onSuccess: (_data, variables) => {
       analytics.track(analyticsEvents.progressUpdated, { book_id: variables.id })
-      void invalidateReadingDerivedQueries(queryClient, variables.id)
+      void invalidateReadingOverviewQueries(queryClient, variables.id)
     }
   })
 }

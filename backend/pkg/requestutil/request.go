@@ -17,6 +17,14 @@ func UserID(c *fiber.Ctx) (uuid.UUID, error) {
 	return ParseUUID(raw, "userID")
 }
 
+func MustUserID(c *fiber.Ctx) uuid.UUID {
+	uid, err := UserID(c)
+	if err != nil {
+		return uuid.Nil
+	}
+	return uid
+}
+
 func UserRole(c *fiber.Ctx) string {
 	raw, _ := c.Locals("userRole").(string)
 	return strings.TrimSpace(raw)

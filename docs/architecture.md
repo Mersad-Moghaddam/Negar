@@ -17,10 +17,19 @@
 - Auth uses bearer access tokens and rotating refresh tokens with Redis-backed token IDs.
 
 ## Frontend runtime shape
-- Route-level composition in `App.tsx` and page modules in `src/pages`.
-- Feature API hooks in `src/features/*`.
+- App bootstrap lives in `frontend/src/app`:
+  - `app-providers.tsx` owns provider composition.
+  - `app-router.tsx` owns lazy route wiring and protected-layout composition.
+- Route entry points remain in `src/pages`, but large page sections should be extracted into `src/features/*` when the page starts mixing rendering, mutations, and orchestration.
+- Feature API hooks live in `src/features/*`.
 - Axios client handles auth header injection and refresh retry.
 - i18n and theme providers persist current settings while honoring legacy Libro keys for compatibility.
+
+## Frontend placement rules
+- Put route-only composition in `src/pages`.
+- Put reusable feature sections, feature-scoped forms, API clients, and TanStack Query hooks in the owning `src/features/<feature>`.
+- Put cross-cutting helpers such as query invalidation and provider wrappers in `src/shared`.
+- Keep shared primitives small and generic; if a component knows about a specific domain flow, it belongs in a feature folder.
 
 ## Operational behavior
 - Readiness checks MySQL and Redis connectivity with timeout.
@@ -32,3 +41,13 @@
 - Product analytics is frontend-driven and centralized in `src/shared/analytics`.
 - Event taxonomy is documented in `docs/analytics-event-model.md`.
 - Product analytics payloads exclude sensitive data and are intentionally separate from backend operational logs/metrics.
+
+## Backend runtime shape
+- Layering remains `controllers -> services -> repositories`, but controller packages are split by responsibility rather than keeping all handlers in a single file.
+- Controller packages should keep:
+  - `controller.go` for wiring/types
+  - `requests.go` for validation helpers
+  - action files such as `books.go`, `status.go`, `notes.go`, `links.go`
+  - `audit.go` when the resource has repeated audit logging
+- Request parsing stays in controllers, domain policies stay in services, and DB/Redis details stay in repositories.
+- Shared transport helpers such as `requestutil.MustUserID` and `apiresponse` are preferred over re-implementing request plumbing in each controller.

@@ -46,6 +46,18 @@ Negar is a full-stack reading tracker and productivity app for planning, trackin
 └── Makefile
 ```
 
+### Frontend source shape
+- `frontend/src/app`: app-level provider and router composition.
+- `frontend/src/pages`: route entry points and thin page orchestration.
+- `frontend/src/features`: feature-local API, queries, forms, and heavy UI sections.
+- `frontend/src/shared`: cross-feature providers, analytics, query helpers, and reusable state wrappers.
+
+### Backend source shape
+- `backend/controllers/*`: HTTP transport grouped by resource, split into smaller request/audit/action files inside each package.
+- `backend/services/*`: business rules and orchestration.
+- `backend/repositories/*`: persistence and Redis/MySQL access.
+- `backend/pkg/*`: small shared utilities for request parsing, responses, validation, reminders, observability, and logging.
+
 ## Environment
 Use:
 - root `.env.example`

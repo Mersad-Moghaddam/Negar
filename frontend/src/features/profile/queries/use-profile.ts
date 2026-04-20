@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { authStore } from '../../../contexts/authStore'
 import { analyticsEvents } from '../../../shared/analytics/events'
 import { analytics } from '../../../shared/analytics/tracker'
+import { invalidateReminderQueries } from '../../../shared/query/invalidation'
 import { queryKeys } from '../../../shared/query/query-keys'
 import {
   fetchReminderSettings,
@@ -45,8 +46,7 @@ export function useUpdateReminderMutation() {
     mutationFn: updateReminderSettings,
     onSuccess: () => {
       analytics.track(analyticsEvents.reminderSettingsChanged)
-      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.reminder })
-      void queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.reminder })
+      void invalidateReminderQueries(queryClient)
     }
   })
 }
